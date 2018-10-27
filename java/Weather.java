@@ -1,4 +1,4 @@
-package dte.masteriot.mdp.listviewcountries.Model;
+package com.example.ao.tabapplication;
 
 public class Weather {
     private int imageResource;

@@ -1,38 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout  xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:background="#ffffff">
+    tools:context="com.example.ao.tabapplication.MainActivity">
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="30dp"
-        android:text="Country list:"
-        android:textColor="@android:color/holo_red_light"
-        android:textSize="24sp" />
-
-    <!--<EditText-->
-        <!--android:id="@+id/etSearch"-->
-        <!--android:layout_width="match_parent"-->
-        <!--android:layout_height="wrap_content"-->
-        <!--android:ems="10"-->
-        <!--android:inputType="textPersonName"-->
-        <!--android:text="Name" />-->
-
-    <ListView
-        android:id="@+id/listView"
+    <android.support.design.widget.TabLayout
+        android:id="@+id/tabLayout"
         android:layout_width="match_parent"
-        android:layout_height="268dp"
-        android:layout_marginBottom="50dp" />
+        android:layout_height="40dp"
+        app:tabIndicatorColor="@color/colorPrimaryDark"
+        app:tabSelectedTextColor="@color/colorPrimaryDark"
+        app:tabTextColor="@color/colorPrimaryDark"
+        android:elevation="5dp"/>
 
-    <TextView
-        android:id="@+id/selection"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Current selection"
-        android:textColor="@android:color/holo_blue_light"
-        android:textSize="30sp" />
+    <android.support.v4.view.ViewPager
+        android:id="@+id/viewPager"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior" />
 
-</LinearLayout >
+</FrameLayout>

@@ -1,4 +1,4 @@
-package dte.masteriot.mdp.listviewcountries.Adapter;
+package com.example.ao.tabapplication;
 
 import android.content.Context;
 import android.view.LayoutInflater;
@@ -12,14 +12,13 @@ import android.widget.TextView;
 
 import java.util.ArrayList;
 
-import dte.masteriot.mdp.listviewcountries.Model.Weather;
-import dte.masteriot.mdp.listviewcountries.R;
 
 public class WeatherArrayAdapter extends ArrayAdapter <Weather> implements Filterable {
     private ArrayList <Weather> originalData;
     private ArrayList <Weather> filteredData;
     private Context mContext;
     private LayoutInflater inflater;
+    ImageView check;
     ItemFilter mFilter = new ItemFilter();
 
     public WeatherArrayAdapter(Context context, ArrayList<Weather> weathers ) {
@@ -48,6 +47,8 @@ public class WeatherArrayAdapter extends ArrayAdapter <Weather> implements Filte
         TextView max    = (TextView) newView.findViewById(R.id.maxTemp);
         TextView min = (TextView) newView.findViewById(R.id.minTemp);
         TextView loc = (TextView) newView.findViewById(R.id.location);
+        check = (ImageView) newView.findViewById(R.id.imgView);
+
 
         Weather weather = filteredData.get(position);
 
@@ -71,6 +72,10 @@ public class WeatherArrayAdapter extends ArrayAdapter <Weather> implements Filte
     @Override
     public Weather getItem(int position) {
         return filteredData.get(position);
+    }
+
+    public void checkItem(){
+        check.setImageResource(R.drawable.termometer);
     }
 
     @Override

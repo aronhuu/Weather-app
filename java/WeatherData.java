@@ -1,4 +1,6 @@
-package dte.masteriot.mdp.listviewcountries.Model;
+package com.example.ao.tabapplication;
+
+import com.example.ao.tabapplication.Weather;
 
 import java.util.ArrayList;
 

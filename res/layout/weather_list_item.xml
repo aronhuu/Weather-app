@@ -43,11 +43,19 @@
         android:id="@+id/location"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_alignParentTop="true"
+        android:layout_toRightOf="@id/maxTemp"
+        android:gravity="center_vertical"
         android:text="Place"
-        android:layout_centerVertical="true"
-        android:textSize="30dp"
-        android:gravity="center"
-        android:layout_toRightOf="@id/maxTemp"/>
+        android:textSize="30dp" />
+
+    <ImageView
+        android:id="@+id/check"
+        android:layout_width="40dp"
+        android:layout_height="match_parent"
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentTop="true"
+        android:src="@drawable/common_google_signin_btn_icon_light" />
+
+
 
 </RelativeLayout>

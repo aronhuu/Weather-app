@@ -1,4 +1,4 @@
-package com.example.ao.tabapplication;
+package finalproject.develop.miot.temperature;
 
 public class Weather {
     private int imageResource;
@@ -25,8 +25,5 @@ public class Weather {
     }
 
     public String getLocation() { return location;}
-//    public String toString() {
-//        return name + ":" + population;
-//    }
 
 }

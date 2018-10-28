@@ -1,6 +1,4 @@
-package com.example.ao.tabapplication;
-
-import com.example.ao.tabapplication.Weather;
+package finalproject.develop.miot.temperature;
 
 import java.util.ArrayList;
 

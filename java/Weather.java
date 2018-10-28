@@ -25,8 +25,6 @@ public class Weather {
     }
 
     public String getLocation() { return location;}
-//    public String toString() {
-//        return name + ":" + population;
-//    }
+
 
 }

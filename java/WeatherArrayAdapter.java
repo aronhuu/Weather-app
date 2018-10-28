@@ -14,11 +14,10 @@ import java.util.ArrayList;
 
 
 public class WeatherArrayAdapter extends ArrayAdapter <Weather> implements Filterable {
-    private ArrayList <Weather> originalData;
+    private  ArrayList <Weather> originalData;
     private ArrayList <Weather> filteredData;
     private Context mContext;
     private LayoutInflater inflater;
-    ImageView check;
     ItemFilter mFilter = new ItemFilter();
 
     public WeatherArrayAdapter(Context context, ArrayList<Weather> weathers ) {
@@ -39,26 +38,21 @@ public class WeatherArrayAdapter extends ArrayAdapter <Weather> implements Filte
             newView = inflater.inflate(R.layout.weather_list_item, parent, false);
         }
 
-        //-----
-        // This approach can be improved for performance using a view holder
-        //-----
-
         ImageView imageView = (ImageView) newView.findViewById(R.id.imgView);
         TextView max    = (TextView) newView.findViewById(R.id.maxTemp);
         TextView min = (TextView) newView.findViewById(R.id.minTemp);
         TextView loc = (TextView) newView.findViewById(R.id.location);
-        check = (ImageView) newView.findViewById(R.id.imgView);
-
+        ImageView check = (ImageView) newView.findViewById(R.id.imgView);
 
         Weather weather = filteredData.get(position);
 
-//        imageView.setImageResource(R.drawable.termometer);
         loc.setText(weather.getLocation());
-        max.setText("Max: "+weather.getMaxTemp());
-        min.setText("Min: "+weather.getMinTemp());
+        max.setText("Max: "+weather.getMaxTemp() + "ºC");
+        min.setText("Min: "+weather.getMinTemp() + "ºC");
 
         return newView;
     }
+
 
     public int getCount() {
         return filteredData.size();
@@ -70,20 +64,13 @@ public class WeatherArrayAdapter extends ArrayAdapter <Weather> implements Filte
     }
 
     @Override
+
     public Weather getItem(int position) {
         return filteredData.get(position);
     }
-
-    public void checkItem(){
-        check.setImageResource(R.drawable.termometer);
-    }
-
     @Override
-//    public long getItemId(int position) {
-//        return position;
-//    }
+
     public long getItemId(int position) {
-//        return originalData.indexOf(getItem(position));
         return position;
     }
 

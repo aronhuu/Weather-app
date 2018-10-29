@@ -67,12 +67,7 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public boolean onQueryTextChange(String newText) {
-                if (newText.isEmpty()) {
-                    tab1.weatherArrayAdapter.getFilter().filter("");
-                } else {
-                    tab1.weatherArrayAdapter.getFilter().filter(newText);
-                }
-//                Toast.makeText(getApplicationContext(),"Text filter action",Toast.LENGTH_SHORT);
+                tab1.weatherArrayAdapter.getFilter().filter(newText);
                 return false;
             }
         });

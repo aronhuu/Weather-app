@@ -42,7 +42,7 @@ public class WeatherArrayAdapter extends ArrayAdapter <Weather> implements Filte
         TextView max    = (TextView) newView.findViewById(R.id.maxTemp);
         TextView min = (TextView) newView.findViewById(R.id.minTemp);
         TextView loc = (TextView) newView.findViewById(R.id.location);
-        ImageView check = (ImageView) newView.findViewById(R.id.imgView);
+        ImageView check = (ImageView) newView.findViewById(R.id.check);
 
         Weather weather = filteredData.get(position);
 
@@ -50,12 +50,21 @@ public class WeatherArrayAdapter extends ArrayAdapter <Weather> implements Filte
         max.setText("Max: "+weather.getMaxTemp() + "ºC");
         min.setText("Min: "+weather.getMinTemp() + "ºC");
 
+        if(weather.getCheck())  check.setImageResource(R.drawable.selected);
+        else   check.setImageResource(R.drawable.non_selected);
+
         return newView;
     }
 
 
     public int getCount() {
         return filteredData.size();
+    }
+
+    public int filtered(){
+        int result = -1;
+        if(filteredData.size()!= originalData.size()) result = getCount();
+        return result;
     }
 
     @Override
@@ -66,12 +75,14 @@ public class WeatherArrayAdapter extends ArrayAdapter <Weather> implements Filte
     @Override
 
     public Weather getItem(int position) {
-        return filteredData.get(position);
+        if(filtered()!=-1) return filteredData.get(position);
+        else return originalData.get(position);
     }
     @Override
 
     public long getItemId(int position) {
-        return position;
+        if(filtered()!=-1) return filteredData.indexOf(originalData.get(position));
+        else return position;
     }
 
 

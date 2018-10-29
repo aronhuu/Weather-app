@@ -24,6 +24,7 @@ import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.text.SimpleDateFormat;
+import java.util.Arrays;
 import java.util.List;
 
 import javax.xml.parsers.DocumentBuilder;
@@ -130,50 +131,22 @@ public class Tab1 extends Fragment implements  ListView.OnItemClickListener{
         }
     }
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-        String items = "";
-        SparseBooleanArray checked= lv.getCheckedItemPositions();
-        for (int i = 0; i < checked.size(); i++) {
-            if ( checked.valueAt(i) ) {
-                int pos = checked.keyAt(i);
 
-//                View childView = getViewByPosition(pos,lv);
-//                ImageView imageView = childView.findViewById(R.id.check);
-//                imageView.setImageResource(R.drawable.selected);
+        Weather w=((Weather)lv.getItemAtPosition(position));
+        w.setCheck();
 
-                TextView tv = (TextView) lv.getChildAt(pos).findViewById(R.id.location);
-                items = items + "\n " +tv.getText().toString();
-                // Getting the Container Layout of the ListView
-                ImageView imageView =lv.getChildAt(pos).findViewById(R.id.check);
-                imageView.setImageResource(R.drawable.selected);
-
-                //predictionText.setText( items );
-                flagPrediction = true;
-                //Download the xml
-                predictionText.setText("7 days prediction of " + cities[position]);
-                DownloadXML taskDownloadXML = new DownloadXML();
-                taskDownloadXML.execute("https://www.aemet.es/xml/municipios/localidad_" + postalCodes[position] + ".xml");
-            }else{
-                ImageView imageView =lv.getChildAt(checked.keyAt(i)).findViewById(R.id.check);
-                imageView.setImageResource(R.drawable.non_selected);
-//                int pos = checked.keyAt(i);
-//                View childView = getViewByPosition(pos,lv);
-//                ImageView imageView = childView.findViewById(R.id.check);
-//                imageView.setImageResource(R.drawable.non_selected);
-            }
+        if(w.getCheck()) {
+            int pos= Arrays.asList(cities).indexOf(w.getLocation());
+            flagPrediction = true;
+            //Download the xml
+            predictionText.setText("7 days prediction of " + cities[pos]);
+            DownloadXML taskDownloadXML = new DownloadXML();
+            taskDownloadXML.execute("https://www.aemet.es/xml/municipios/localidad_" + postalCodes[pos] + ".xml");
         }
-    }
 
-//    public View getViewByPosition(int pos, ListView listView) {
-//        final int firstListItemPosition = listView.getFirstVisiblePosition();
-//        final int lastListItemPosition = firstListItemPosition + listView.getChildCount() - 1;
-//
-//        if (pos < firstListItemPosition || pos > lastListItemPosition ) {
-//            return listView.getAdapter().getView(pos, null, listView);
-//        } else {
-//            final int childIndex = pos - firstListItemPosition;
-//            return listView.getChildAt(childIndex);
-//        }
-//    }
+
+		weatherArrayAdapter.notifyDataSetChanged();
+    }
 
     //Method that modifies the global arrays with the information of the xml
     public void xmlParser(InputStream is) {

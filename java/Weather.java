@@ -4,6 +4,7 @@ public class Weather {
     private int imageResource;
     private String maxTemp, minTemp;
     private String location;
+    private boolean check=false;
 
     public Weather(int img, String max, String min, String loc){
         imageResource = img;
@@ -25,6 +26,14 @@ public class Weather {
     }
 
     public String getLocation() { return location;}
+	
+	    public boolean setCheck(){
+        check=!check;
+        return check;
+    }
+    public boolean getCheck(){
+        return check;
+    }
 
 
 }

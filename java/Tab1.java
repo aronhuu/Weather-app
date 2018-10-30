@@ -1,5 +1,6 @@
 package com.example.ao.tabapplication;
 
+import android.graphics.Color;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -15,6 +16,15 @@ import android.widget.ListView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
+import com.github.mikephil.charting.charts.LineChart;
+import com.github.mikephil.charting.components.AxisBase;
+import com.github.mikephil.charting.components.XAxis;
+import com.github.mikephil.charting.components.YAxis;
+import com.github.mikephil.charting.data.Entry;
+import com.github.mikephil.charting.data.LineData;
+import com.github.mikephil.charting.data.LineDataSet;
+import com.github.mikephil.charting.formatter.DefaultAxisValueFormatter;
+
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
@@ -23,7 +33,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -41,8 +53,12 @@ public class Tab1 extends Fragment implements  ListView.OnItemClickListener{
     final static int NUMBER_CITIES = 200;
     final static int DAYS = 7;
     private boolean flagPrediction;
+    String city;
+    boolean flag =true;
+    LineDataSet previousDataSet1, previousDataSet2;
 
     ListView lv;
+    LineChart lChart;
     TextView predictionText, date1, date2, date3, date4, date5, date6, date7, max1, max2, max3, max4, max5, max6, max7, min1, min2, min3, min4, min5, min6, min7;
     WeatherArrayAdapter weatherArrayAdapter;
     //Global arrays to save the values for the lv
@@ -61,31 +77,11 @@ public class Tab1 extends Fragment implements  ListView.OnItemClickListener{
         View view = inflater.inflate(R.layout.tab1, container, false);
 
         lv = (ListView)view.findViewById(R.id.listView);
+        lChart = (LineChart) view.findViewById(R.id.chart);
+        lChart.setNoDataText("Please, select a city.");
+        lChart.setNoDataTextColor(Color.BLACK);
         predictionText = (TextView)view.findViewById(R.id.prediction);
         predictionText.setText("Select one item to see the prediction of 7 days");
-        date1 = (TextView) view.findViewById(R.id.date1);
-        date2 = (TextView) view.findViewById(R.id.date2);
-        date3 = (TextView) view.findViewById(R.id.date3);
-        date4 = (TextView) view.findViewById(R.id.date4);
-        date5 = (TextView) view.findViewById(R.id.date5);
-        date6 = (TextView) view.findViewById(R.id.date6);
-        date7 = (TextView) view.findViewById(R.id.date7);
-
-        min1 = (TextView) view.findViewById(R.id.min1);
-        min2 = (TextView) view.findViewById(R.id.min2);
-        min3 = (TextView) view.findViewById(R.id.min3);
-        min4 = (TextView) view.findViewById(R.id.min4);
-        min5 = (TextView) view.findViewById(R.id.min5);
-        min6 = (TextView) view.findViewById(R.id.min6);
-        min7 = (TextView) view.findViewById(R.id.min7);
-
-        max1 = (TextView) view.findViewById(R.id.max1);
-        max2 = (TextView) view.findViewById(R.id.max2);
-        max3 = (TextView) view.findViewById(R.id.max3);
-        max4 = (TextView) view.findViewById(R.id.max4);
-        max5 = (TextView) view.findViewById(R.id.max5);
-        max6 = (TextView) view.findViewById(R.id.max6);
-        max7 = (TextView) view.findViewById(R.id.max7);
 
         DownloadXML taskDownloadXML = new DownloadXML();
         taskDownloadXML.execute(XML_TEMPERATURE_SPAIN);
@@ -125,7 +121,8 @@ public class Tab1 extends Fragment implements  ListView.OnItemClickListener{
                 lv.setOnItemClickListener(Tab1.this);
             }
             else{
-                setPrediction();
+                setPrediction(flag);
+                flag=false;
 //                flagPrediction = false;
             }
         }
@@ -139,11 +136,12 @@ public class Tab1 extends Fragment implements  ListView.OnItemClickListener{
             int pos= Arrays.asList(cities).indexOf(w.getLocation());
             flagPrediction = true;
             //Download the xml
-            predictionText.setText("7 days prediction of " + cities[pos]);
+            predictionText.setText("7 days prediction of " + city +" and "+cities[pos]);
+            city=cities[pos];
+
             DownloadXML taskDownloadXML = new DownloadXML();
             taskDownloadXML.execute("https://www.aemet.es/xml/municipios/localidad_" + postalCodes[pos] + ".xml");
         }
-
 
 		weatherArrayAdapter.notifyDataSetChanged();
     }
@@ -225,34 +223,88 @@ public class Tab1 extends Fragment implements  ListView.OnItemClickListener{
         }
     }
 
-    public void setPrediction(){
+    public void setPrediction(boolean isFirst){
         SimpleDateFormat inFormat = new SimpleDateFormat("yyyy-MM-dd");
-        try {
-            date1.setText(new SimpleDateFormat("EEEE").format(inFormat.parse(predictionDate[0])).substring(0, 1).toUpperCase());
-            min1.setText(predictionTmin[0]);
-            max1.setText(predictionTmax[0]);
-            date2.setText(new SimpleDateFormat("EEEE").format(inFormat.parse(predictionDate[1])).substring(0, 1).toUpperCase());
-            min2.setText(predictionTmin[1]);
-            max2.setText(predictionTmax[1]);
-            date3.setText(new SimpleDateFormat("EEEE").format(inFormat.parse(predictionDate[2])).substring(0, 1).toUpperCase());
-            min3.setText(predictionTmin[2]);
-            max3.setText(predictionTmax[2]);
-            date4.setText(new SimpleDateFormat("EEEE").format(inFormat.parse(predictionDate[3])).substring(0, 1).toUpperCase());
-            min4.setText(predictionTmin[3]);
-            max4.setText(predictionTmax[3]);
-            date5.setText(new SimpleDateFormat("EEEE").format(inFormat.parse(predictionDate[4])).substring(0, 1).toUpperCase());
-            min5.setText(predictionTmin[4]);
-            max5.setText(predictionTmax[4]);
-            date6.setText(new SimpleDateFormat("EEEE").format(inFormat.parse(predictionDate[5])).substring(0, 1).toUpperCase());
-            min6.setText(predictionTmin[5]);
-            max6.setText(predictionTmax[5]);
-            date7.setText(new SimpleDateFormat("EEEE").format(inFormat.parse(predictionDate[6])).substring(0, 1).toUpperCase());
-            min7.setText(predictionTmin[6]);
-            max7.setText(predictionTmax[6]);
+        final List<String> dias = new ArrayList<>();
+        List<Entry> max = new ArrayList<>();
+        List<Entry> min = new ArrayList<>();
+
+        for (int i=0; i<DAYS; i++){
+            try {
+                dias.add(new SimpleDateFormat("EEEE").format(inFormat.parse(predictionDate[i])).substring(0, 2).toUpperCase());
+            } catch (ParseException e) {
+                e.printStackTrace();
+            }
+            max.add(new Entry(i,(Integer.parseInt(predictionTmax[i]))));
+            min.add(new Entry(i,(Integer.parseInt(predictionTmin[i]))));
+            System.out.println(predictionDate[i]+":"+predictionTmax[i]+":"+predictionTmin[i]);
         }
-        catch (java.text.ParseException e){
-            e.printStackTrace();
+
+        lChart.getDescription().setEnabled(false);
+
+        if(isFirst){
+            previousDataSet1=getDataSet(max, "Max temp "+city);
+            previousDataSet1.setColor(Color.BLUE);
+            previousDataSet1.setValueTextColor(Color.BLUE);
+            previousDataSet2=getDataSet(min, "Min temp "+city);
+            previousDataSet2.setColor(Color.MAGENTA);
+            previousDataSet2.setValueTextColor(Color.MAGENTA);
+            lChart.setData(new LineData(previousDataSet1,previousDataSet2));
+        }else{
+            LineDataSet dataSet1=previousDataSet1;
+            dataSet1.setColor(Color.BLUE);
+            dataSet1.setValueTextColor(Color.BLUE);
+            LineDataSet dataSet2=previousDataSet2;
+            dataSet2.setColor(Color.MAGENTA);
+            dataSet2.setValueTextColor(Color.MAGENTA);
+
+            LineDataSet dataSet3=getDataSet(max, "Max temp "+city);
+            dataSet3.setColor(Color.RED);
+            dataSet3.setValueTextColor(Color.RED);
+            LineDataSet dataSet4=getDataSet(min, "Min temp "+city);
+            dataSet4.setColor(Color.GRAY);
+            dataSet4.setValueTextColor(Color.GRAY);
+
+            lChart.setData(new LineData(dataSet1,dataSet2,dataSet3,dataSet4));
+            previousDataSet1=dataSet3;
+            previousDataSet2=dataSet4;
         }
+
+
+
+        XAxis xAxis = lChart.getXAxis();
+        xAxis.setPosition(XAxis.XAxisPosition.BOTTOM);
+        xAxis.setDrawGridLines(false);
+        xAxis.setValueFormatter(new DefaultAxisValueFormatter(0){
+            @Override
+            public String getFormattedValue(float value, AxisBase axis) {
+                return dias.get((int)value);
+            }
+        });
+
+        lChart.setScaleX(1);
+        lChart.setVisibleXRange(-1,6);
+        lChart.getAxisLeft().setEnabled(false);
+        lChart.getAxisLeft().setDrawGridLines(false);
+        lChart.getAxisRight().setEnabled(false);
+        lChart.setScaleEnabled(false);
+        lChart.getLegend().setWordWrapEnabled(true);
+        lChart.invalidate();
+    }
+
+    public LineDataSet getDataSet( List<Entry> data, String label){
+        LineDataSet dataSet1;
+
+        dataSet1 = new LineDataSet(data,label);
+        dataSet1.setDrawValues(true);
+        dataSet1.setValueTextSize(10);
+        dataSet1.setDrawCircles(false);
+//        if (first) dataSet1.setColor(R.color.TempMaxBlue);
+        dataSet1.setColor(R.color.TempMaxRed);
+        dataSet1.setMode(LineDataSet.Mode.CUBIC_BEZIER);
+        dataSet1.setHighlightEnabled(false);
+
+        return dataSet1;
     }
 
 }

@@ -49,8 +49,8 @@ public class MainActivity extends AppCompatActivity {
         tabViewPagerAdapter.addFragment(tab1, "Weather");
         tabViewPagerAdapter.addFragment(new Tab2(), "Map");
         viewPager.setAdapter(tabViewPagerAdapter);
-    }
 
+    }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {

@@ -3,4 +3,8 @@
     <color name="colorPrimary">#3F51B5</color>
     <color name="colorPrimaryDark">#303F9F</color>
     <color name="colorAccent">#FF4081</color>
+    <color name="TempMaxBlue">#FFA9D0F5</color>
+    <color name="TempMinBlue">#F2F5A9</color>
+    <color name="TempMaxRed">#FFFF0000</color>
+    <color name="TempMinRed">#FFFF4000</color>
 </resources>

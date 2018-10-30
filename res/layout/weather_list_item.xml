@@ -12,7 +12,7 @@
     <ImageView
         android:id="@+id/imgView"
         android:layout_width="52dp"
-        android:layout_height="53dp"
+        android:layout_height="52dp"
         android:layout_alignParentLeft="true"
         android:src="@drawable/termometer" />
 
@@ -20,6 +20,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:orientation="vertical">
+
         <TextView
             android:id="@+id/maxTemp"
             android:layout_width="wrap_content"
@@ -43,6 +44,7 @@
             android:layout_marginLeft="10dp"
             android:layout_marginRight="10dp"
             android:textColor="@android:color/holo_blue_light" />
+
     </LinearLayout>
 
 
@@ -56,12 +58,14 @@
         android:textColor="@android:color/black"
         android:textSize="20dp" />
 
+
     <ImageView
-        android:id="@+id/checkbox"
+        android:id="@+id/check"
         android:layout_width="51dp"
         android:layout_height="20dp"
         android:layout_gravity="center"
         android:layout_toRightOf="@id/location"
         android:src="@drawable/non_selected" />
+
 
 </LinearLayout>

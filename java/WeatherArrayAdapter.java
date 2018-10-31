@@ -1,11 +1,10 @@
-package finalproject.develop.miot.temperature;
+package com.example.ao.tabapplication;
 
 import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
-import android.widget.CheckBox;
 import android.widget.Filter;
 import android.widget.Filterable;
 import android.widget.ImageView;
@@ -13,20 +12,20 @@ import android.widget.TextView;
 
 import java.util.ArrayList;
 
+
 public class WeatherArrayAdapter extends ArrayAdapter <Weather> implements Filterable {
-    private ArrayList <Weather> originalData;
+    private  ArrayList <Weather> originalData;
     private ArrayList <Weather> filteredData;
     private Context mContext;
     private LayoutInflater inflater;
     ItemFilter mFilter = new ItemFilter();
-
-    ImageView checkBox;
 
     public WeatherArrayAdapter(Context context, ArrayList<Weather> weathers ) {
         super( context, 0, weathers );
         originalData = weathers;
         filteredData=weathers;
         mContext = context;
+//        inflater = (LayoutInflater) mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         inflater  = LayoutInflater.from(context);
     }
 
@@ -43,20 +42,29 @@ public class WeatherArrayAdapter extends ArrayAdapter <Weather> implements Filte
         TextView max    = (TextView) newView.findViewById(R.id.maxTemp);
         TextView min = (TextView) newView.findViewById(R.id.minTemp);
         TextView loc = (TextView) newView.findViewById(R.id.location);
-        checkBox = (ImageView) newView.findViewById(R.id.checkbox);
+        ImageView check = (ImageView) newView.findViewById(R.id.check);
 
         Weather weather = filteredData.get(position);
 
         loc.setText(weather.getLocation());
         max.setText("Max: "+weather.getMaxTemp() + "ºC");
         min.setText("Min: "+weather.getMinTemp() + "ºC");
-        checkBox.setImageResource(R.drawable.non_selected);
+
+        if(weather.getCheck())  check.setImageResource(R.drawable.selected);
+        else   check.setImageResource(R.drawable.non_selected);
 
         return newView;
     }
 
+
     public int getCount() {
         return filteredData.size();
+    }
+
+    public int filtered(){
+        int result = -1;
+        if(filteredData.size()!= originalData.size()) result = getCount();
+        return result;
     }
 
     @Override
@@ -65,12 +73,16 @@ public class WeatherArrayAdapter extends ArrayAdapter <Weather> implements Filte
     }
 
     @Override
+
     public Weather getItem(int position) {
-        return filteredData.get(position);
+        if(filtered()!=-1) return filteredData.get(position);
+        else return originalData.get(position);
     }
+    @Override
 
     public long getItemId(int position) {
-        return position;
+        if(filtered()!=-1) return filteredData.indexOf(originalData.get(position));
+        else return position;
     }
 
 
@@ -106,10 +118,6 @@ public class WeatherArrayAdapter extends ArrayAdapter <Weather> implements Filte
         protected void publishResults(CharSequence constraint, FilterResults results) {
             filteredData = (ArrayList<Weather>) results.values;
             notifyDataSetChanged();
-        }
-
-        public void changeToChecked(){
-
         }
 
     }

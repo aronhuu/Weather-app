@@ -55,11 +55,12 @@ public class Tab1 extends Fragment implements  ListView.OnItemClickListener{
     private boolean flagPrediction;
     String city;
     boolean flag =true;
+    int lastCheckedIndex;
     LineDataSet previousDataSet1, previousDataSet2;
 
     ListView lv;
     LineChart lChart;
-    TextView predictionText, date1, date2, date3, date4, date5, date6, date7, max1, max2, max3, max4, max5, max6, max7, min1, min2, min3, min4, min5, min6, min7;
+    TextView predictionText;
     WeatherArrayAdapter weatherArrayAdapter;
     //Global arrays to save the values for the lv
     String[] cities = new String[NUMBER_CITIES];
@@ -70,6 +71,9 @@ public class Tab1 extends Fragment implements  ListView.OnItemClickListener{
     String[] predictionDate = new String[DAYS];
     String[] predictionTmax = new String[DAYS];
     String[] predictionTmin = new String[DAYS];
+    String[] skyStates = new String[DAYS];
+
+    Communicator communicator;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -85,6 +89,8 @@ public class Tab1 extends Fragment implements  ListView.OnItemClickListener{
 
         DownloadXML taskDownloadXML = new DownloadXML();
         taskDownloadXML.execute(XML_TEMPERATURE_SPAIN);
+
+        communicator = (Communicator) getActivity();
 
         return view;
     }
@@ -122,6 +128,7 @@ public class Tab1 extends Fragment implements  ListView.OnItemClickListener{
             }
             else{
                 setPrediction(flag);
+                communicator.answer(postalCodes[lastCheckedIndex], cities[lastCheckedIndex], skyStates[0]);
                 flag=false;
 //                flagPrediction = false;
             }
@@ -141,6 +148,8 @@ public class Tab1 extends Fragment implements  ListView.OnItemClickListener{
 
             DownloadXML taskDownloadXML = new DownloadXML();
             taskDownloadXML.execute("https://www.aemet.es/xml/municipios/localidad_" + postalCodes[pos] + ".xml");
+            lastCheckedIndex=pos;
+
         }
 
 		weatherArrayAdapter.notifyDataSetChanged();
@@ -201,6 +210,20 @@ public class Tab1 extends Fragment implements  ListView.OnItemClickListener{
                     //Each day
                     Element dia = (Element) diaList.item(i);
                     predictionDate[i] = dia.getAttribute("fecha");
+                    //Recover the sky state
+                    NodeList skyStateList = dia.getElementsByTagName("estado_cielo");
+                    for(int j = 0; (j < skyStateList.getLength()) ;j++) {
+                        Element skyState = (Element) skyStateList.item(j);
+                        if ((!skyState.getAttribute("descripcion").equals(""))){
+                            skyStates[i] = skyState.getAttribute("descripcion");
+                            break;
+                        }
+                        else{
+                            if( i == (skyStateList.getLength() -1 )){
+                                skyStates[i] ="";
+                            }
+                        }
+                    }
                     //Recover the Provinces
                     NodeList temperaturaList = dia.getElementsByTagName("temperatura");
                     Element temperatura = (Element) temperaturaList.item(0);

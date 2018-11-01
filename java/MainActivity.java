@@ -11,11 +11,12 @@ import android.view.View;
 import android.widget.SearchView;
 import android.widget.Toast;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements Communicator{
 
     private TabLayout tabLayout;
     private ViewPager viewPager;
     Tab1 tab1;
+    Tab2 tab2;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -46,8 +47,9 @@ public class MainActivity extends AppCompatActivity {
     private void setUpViewPager(ViewPager viewPager) {
         TabViewPagerAdapter tabViewPagerAdapter = new TabViewPagerAdapter(getSupportFragmentManager());
         tab1 = new Tab1();
+        tab2 = new Tab2();
         tabViewPagerAdapter.addFragment(tab1, "Weather");
-        tabViewPagerAdapter.addFragment(new Tab2(), "Map");
+        tabViewPagerAdapter.addFragment(tab2, "Map");
         viewPager.setAdapter(tabViewPagerAdapter);
 
     }
@@ -76,4 +78,8 @@ public class MainActivity extends AppCompatActivity {
         return super.onCreateOptionsMenu(menu);
     }
 
+    @Override
+    public void answer(String lastPostalCode, String lastCityName, String lastSkyState) {
+        tab2.setLastPostalCodeOnMap(lastPostalCode, lastCityName, lastSkyState);
+    }
 }

@@ -6,8 +6,8 @@ public class Weather {
     private String location;
     private boolean check=false;
 
-    public Weather(int img, String max, String min, String loc){
-        imageResource = img;
+    public Weather(boolean c, String max, String min, String loc){
+        check = c;
         maxTemp = max;
         minTemp = min;
         location = loc;

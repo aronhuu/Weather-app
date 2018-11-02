@@ -1,5 +1,7 @@
 package com.example.ao.tabapplication;
 
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.support.design.widget.TabLayout;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
@@ -10,6 +12,8 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.SearchView;
 import android.widget.Toast;
+
+import java.util.Arrays;
 
 public class MainActivity extends AppCompatActivity implements Communicator{
 
@@ -42,6 +46,20 @@ public class MainActivity extends AppCompatActivity implements Communicator{
             }
         });
         setUpViewPager(viewPager);
+
+//        SharedPreferences sharedPref = getPreferences(Context.MODE_PRIVATE);
+//        SharedPreferences.Editor editor = sharedPref.edit();
+//        String s =sharedPref.getString("cities", null);
+//        if(s!=null)
+//            tab1.setCity(s.replace("[", "").replace("]", "").split(", "));
+//        s =sharedPref.getString("tMax", null);
+//        if(s!=null)
+//            tab1.tMax=s.replace("[", "").replace("]", "").split(", ");
+//        s =sharedPref.getString("tMin", null);
+//        if(s!=null)
+//            tab1.tMin=s.replace("[", "").replace("]", "").split(", ");
+
+
     }
 
     private void setUpViewPager(ViewPager viewPager) {
@@ -81,5 +99,16 @@ public class MainActivity extends AppCompatActivity implements Communicator{
     @Override
     public void answer(String lastPostalCode, String lastCityName, String lastSkyState) {
         tab2.setLastPostalCodeOnMap(lastPostalCode, lastCityName, lastSkyState);
+    }
+
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
     }
 }

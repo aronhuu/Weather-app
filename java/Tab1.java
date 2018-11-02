@@ -1,5 +1,7 @@
 package com.example.ao.tabapplication;
 
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -52,24 +54,35 @@ public class Tab1 extends Fragment implements  ListView.OnItemClickListener{
     final static String XML_TEMPERATURE_SPAIN = "http://www.aemet.es/xml/ccaa/20181026_t_prev_esp.xml";
     final static int NUMBER_CITIES = 200;
     final static int DAYS = 7;
-    private boolean flagPrediction;
-    String city;
-    boolean flag =true;
-    int lastCheckedIndex;
-    LineDataSet previousDataSet1, previousDataSet2;
 
+    private boolean flagPrediction;
+    String previousCity, actualCity;
+    int previousCheckedIndex, lastCheckedIndex;
+    boolean isFirst=true;
+//    LineDataSet previousDataSet1, previousDataSet2;
+
+
+    //Elements from the layout
     ListView lv;
     LineChart lChart;
     TextView predictionText;
     WeatherArrayAdapter weatherArrayAdapter;
+
     //Global arrays to save the values for the lv
-    String[] cities = new String[NUMBER_CITIES];
+    String[] cities = null;
     String[] tMax = new String[NUMBER_CITIES];
     String[] tMin = new String[NUMBER_CITIES];
+    Boolean[] checks = new Boolean[NUMBER_CITIES];
+
+
     //Global arrays for prediction data
     String[] postalCodes = new String[NUMBER_CITIES];
     String[] predictionDate = new String[DAYS];
     String[] predictionTmax = new String[DAYS];
+    List<Entry> previousTmax= new ArrayList<>();
+    List<Entry> previousTmin = new ArrayList<>();
+    List<Entry> actualTmax = new ArrayList<>();
+    List<Entry> actualTmin = new ArrayList<>();
     String[] predictionTmin = new String[DAYS];
     String[] skyStates = new String[DAYS];
 
@@ -82,13 +95,17 @@ public class Tab1 extends Fragment implements  ListView.OnItemClickListener{
 
         lv = (ListView)view.findViewById(R.id.listView);
         lChart = (LineChart) view.findViewById(R.id.chart);
-        lChart.setNoDataText("Please, select a city.");
+        lChart.setNoDataText("Please, select a city and wait");
         lChart.setNoDataTextColor(Color.BLACK);
         predictionText = (TextView)view.findViewById(R.id.prediction);
-        predictionText.setText("Select one item to see the prediction of 7 days");
+        predictionText.setText("Please wait, downloading city information");
 
-        DownloadXML taskDownloadXML = new DownloadXML();
-        taskDownloadXML.execute(XML_TEMPERATURE_SPAIN);
+        Arrays.fill(checks, Boolean.FALSE);
+
+//        if(cities==null) {
+//            DownloadXML taskDownloadXML = new DownloadXML();
+//            taskDownloadXML.execute(XML_TEMPERATURE_SPAIN);
+//        }
 
         communicator = (Communicator) getActivity();
 
@@ -96,6 +113,34 @@ public class Tab1 extends Fragment implements  ListView.OnItemClickListener{
     }
 
     //Class that download the xml with the cities and the temperatures, AsyncTask
+
+    public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+
+        Weather w=((Weather)lv.getItemAtPosition(position));
+        w.setCheck();
+
+        if(w.getCheck()) {
+            if(!isFirst){
+                previousCity=actualCity;
+                previousCheckedIndex=lastCheckedIndex;
+                previousTmax=actualTmax;
+                previousTmin=actualTmin;
+            }
+            lastCheckedIndex= Arrays.asList(cities).indexOf(w.getLocation());
+            checks[lastCheckedIndex]=!checks[lastCheckedIndex];
+            flagPrediction = true;
+            //Download the prediction xml of the selected city
+            actualCity=cities[lastCheckedIndex];
+            predictionText.setText("Please wait" );
+
+            DownloadXML taskDownloadXML = new DownloadXML();
+            taskDownloadXML.execute("https://www.aemet.es/xml/municipios/localidad_" + postalCodes[lastCheckedIndex] + ".xml");
+        }
+
+		weatherArrayAdapter.notifyDataSetChanged();
+    }
+
+    //-------------------------Asynctask--------------------------
     private class DownloadXML extends AsyncTask<String, Void, Void> {
         private String contentType = "";
         @Override
@@ -120,41 +165,115 @@ public class Tab1 extends Fragment implements  ListView.OnItemClickListener{
         protected void onPostExecute(Void aVoid) {
 
             if(!flagPrediction) {
-                WeatherData weatherData = new WeatherData(cities, tMax, tMin);
+                predictionText.setText("Select one item to see the prediction of 7 days");
+                WeatherData weatherData = new WeatherData(checks, cities, tMax, tMin);
                 weatherArrayAdapter = new WeatherArrayAdapter(getContext(), weatherData.getWeatherList());
                 lv.setAdapter(weatherArrayAdapter);
                 lv.setChoiceMode(ListView.CHOICE_MODE_MULTIPLE);
                 lv.setOnItemClickListener(Tab1.this);
             }
             else{
-                setPrediction(flag);
+                setPrediction();
                 communicator.answer(postalCodes[lastCheckedIndex], cities[lastCheckedIndex], skyStates[0]);
-                flag=false;
-//                flagPrediction = false;
             }
         }
     }
-    public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
 
-        Weather w=((Weather)lv.getItemAtPosition(position));
-        w.setCheck();
-
-        if(w.getCheck()) {
-            int pos= Arrays.asList(cities).indexOf(w.getLocation());
-            flagPrediction = true;
-            //Download the xml
-            predictionText.setText("7 days prediction of " + city +" and "+cities[pos]);
-            city=cities[pos];
-
-            DownloadXML taskDownloadXML = new DownloadXML();
-            taskDownloadXML.execute("https://www.aemet.es/xml/municipios/localidad_" + postalCodes[pos] + ".xml");
-            lastCheckedIndex=pos;
-
+    public void setPrediction(){
+        SimpleDateFormat inFormat = new SimpleDateFormat("yyyy-MM-dd");
+        final List<String> dias = new ArrayList<>();
+        actualTmax =  new ArrayList<>();
+        actualTmin = new ArrayList<>();
+        for (int i=0; i<DAYS; i++){
+            try {
+                dias.add(new SimpleDateFormat("EEEE").format(inFormat.parse(predictionDate[i])).substring(0, 2).toUpperCase());
+            } catch (ParseException e) {
+                e.printStackTrace();
+            }
+            actualTmax.add(new Entry(i,(Integer.parseInt(predictionTmax[i]))));
+            actualTmin.add(new Entry(i,(Integer.parseInt(predictionTmin[i]))));
+            System.out.println(predictionDate[i]+":"+predictionTmax[i]+":"+predictionTmin[i]);
         }
 
-		weatherArrayAdapter.notifyDataSetChanged();
+        lChart.getDescription().setEnabled(false);
+
+        setChart();
+
+        previousCheckedIndex=lastCheckedIndex;
+
+        XAxis xAxis = lChart.getXAxis();
+        xAxis.setPosition(XAxis.XAxisPosition.BOTTOM);
+        xAxis.setDrawGridLines(false);
+        xAxis.setValueFormatter(new DefaultAxisValueFormatter(0){
+            @Override
+            public String getFormattedValue(float value, AxisBase axis) {
+                return dias.get((int)value);
+            }
+        });
+
+        lChart.setScaleX(1);
+        lChart.setVisibleXRange(-1,6);
+        lChart.getAxisLeft().setEnabled(false);
+        lChart.getAxisLeft().setDrawGridLines(false);
+        lChart.getAxisRight().setEnabled(false);
+        lChart.setScaleEnabled(false);
+        lChart.getLegend().setWordWrapEnabled(true);
+        lChart.invalidate();
     }
 
+    public void setChart() {
+        if(isFirst){//If it's the first time to plot a prediction
+            predictionText.setText("7 days prediction of " + actualCity );
+            LineDataSet dataSet1=getDataSet(actualTmax, "Max temp "+actualCity);
+            dataSet1.setColor(Color.BLUE);
+            dataSet1.setValueTextColor(Color.BLUE);
+            LineDataSet dataSet2=getDataSet(actualTmin, "Min temp "+actualCity);
+            dataSet2.setColor(Color.MAGENTA);
+            dataSet2.setValueTextColor(Color.MAGENTA);
+            lChart.setData(new LineData(dataSet1,dataSet2));
+            isFirst=false;
+        }else {
+            LineDataSet dataSet1 = getDataSet(previousTmax, "Max temp " + previousCity);
+            dataSet1.setColor(Color.BLUE);
+            dataSet1.setValueTextColor(Color.BLUE);
+            LineDataSet dataSet2 = getDataSet(previousTmin, "Max temp " + previousCity);
+            dataSet2.setColor(Color.MAGENTA);
+            dataSet2.setValueTextColor(Color.MAGENTA);
+
+            if (previousCity == actualCity ) {
+                predictionText.setText("7 days prediction of " + actualCity);
+                lChart.setData(new LineData(dataSet1,dataSet2));
+            }
+            else{
+                LineDataSet dataSet3 = getDataSet(actualTmax, "Max temp " + actualCity);
+                dataSet3.setColor(Color.RED);
+                dataSet3.setValueTextColor(Color.RED);
+                LineDataSet dataSet4 = getDataSet(actualTmin, "Min temp " + actualCity);
+                dataSet4.setColor(Color.GRAY);
+                dataSet4.setValueTextColor(Color.GRAY);
+                predictionText.setText("7 days prediction of " + previousCity + " and " + actualCity);
+                lChart.setData(new LineData(dataSet1,dataSet2,dataSet3,dataSet4));
+            }
+
+        }
+    }
+
+    public LineDataSet getDataSet( List<Entry> data, String label){
+        LineDataSet dataSet1;
+
+        dataSet1 = new LineDataSet(data,label);
+        dataSet1.setDrawValues(true);
+        dataSet1.setValueTextSize(10);
+        dataSet1.setDrawCircles(false);
+//        if (first) dataSet1.setColor(R.color.TempMaxBlue);
+        dataSet1.setColor(R.color.TempMaxRed);
+        dataSet1.setMode(LineDataSet.Mode.CUBIC_BEZIER);
+        dataSet1.setHighlightEnabled(false);
+
+        return dataSet1;
+    }
+
+    //-------------------------xmlParser--------------------------
     //Method that modifies the global arrays with the information of the xml
     public void xmlParser(InputStream is) {
         Document document;
@@ -246,88 +365,134 @@ public class Tab1 extends Fragment implements  ListView.OnItemClickListener{
         }
     }
 
-    public void setPrediction(boolean isFirst){
-        SimpleDateFormat inFormat = new SimpleDateFormat("yyyy-MM-dd");
-        final List<String> dias = new ArrayList<>();
-        List<Entry> max = new ArrayList<>();
-        List<Entry> min = new ArrayList<>();
 
-        for (int i=0; i<DAYS; i++){
-            try {
-                dias.add(new SimpleDateFormat("EEEE").format(inFormat.parse(predictionDate[i])).substring(0, 2).toUpperCase());
-            } catch (ParseException e) {
-                e.printStackTrace();
+    @Override
+    public void onResume() {
+        super.onResume();
+
+        SharedPreferences sharedPref = getActivity().getPreferences(Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPref.edit();
+
+        //Get the cities, tMax, tMin, postalCodes, checks
+        String s =sharedPref.getString("cities", null);
+        if(s!=null)
+            cities=s.replace("[", "").replace("]", "").split(", ");
+
+        s =sharedPref.getString("tMax", null);
+        if(s!=null)
+            tMax=s.replace("[", "").replace("]", "").split(", ");
+
+        s =sharedPref.getString("tMin", null);
+        if(s!=null)
+            tMin=s.replace("[", "").replace("]", "").split(", ");
+
+        s =sharedPref.getString("postalCodes", null);
+        if(s!=null)
+            postalCodes=s.replace("[", "").replace("]", "").split(", ");
+
+        s =sharedPref.getString("checks", null);
+        if(s!=null) {
+            String [] sa=s.replace("[", "").replace("]", "").split(", ");
+            for (int i =0; i<sa.length; i++){
+                checks[i]=Boolean.parseBoolean(sa[i]);
             }
-            max.add(new Entry(i,(Integer.parseInt(predictionTmax[i]))));
-            min.add(new Entry(i,(Integer.parseInt(predictionTmin[i]))));
-            System.out.println(predictionDate[i]+":"+predictionTmax[i]+":"+predictionTmin[i]);
         }
 
-        lChart.getDescription().setEnabled(false);
+        if(cities==null) {
+            cities=new String[NUMBER_CITIES];
+            DownloadXML taskDownloadXML = new DownloadXML();
+            taskDownloadXML.execute(XML_TEMPERATURE_SPAIN);
+        }else {
+            predictionText.setText("Select one item to see the prediction of 7 days");
+            weatherArrayAdapter = new WeatherArrayAdapter(getContext(), new WeatherData(checks, cities, tMax, tMin).getWeatherList());
+            lv.setAdapter(weatherArrayAdapter);
+            lv.setChoiceMode(ListView.CHOICE_MODE_MULTIPLE);
+            lv.setOnItemClickListener(Tab1.this);
 
-        if(isFirst){
-            previousDataSet1=getDataSet(max, "Max temp "+city);
-            previousDataSet1.setColor(Color.BLUE);
-            previousDataSet1.setValueTextColor(Color.BLUE);
-            previousDataSet2=getDataSet(min, "Min temp "+city);
-            previousDataSet2.setColor(Color.MAGENTA);
-            previousDataSet2.setValueTextColor(Color.MAGENTA);
-            lChart.setData(new LineData(previousDataSet1,previousDataSet2));
-        }else{
-            LineDataSet dataSet1=previousDataSet1;
-            dataSet1.setColor(Color.BLUE);
-            dataSet1.setValueTextColor(Color.BLUE);
-            LineDataSet dataSet2=previousDataSet2;
-            dataSet2.setColor(Color.MAGENTA);
-            dataSet2.setValueTextColor(Color.MAGENTA);
+            flagPrediction = sharedPref.getBoolean("flagPrediction", false);
+//        isFirst=sharedPref.getBoolean("isFirst",false);
+            if (flagPrediction) {
+                //Get the prediction data
+                s = sharedPref.getString("predictionDate", null);
+                if (s != null)
+                    predictionDate = s.replace("[", "").replace("]", "").split(", ");
+                s = sharedPref.getString("predictionTmax", null);
+                if (s != null)
+                    predictionTmax = s.replace("[", "").replace("]", "").split(", ");
+                s = sharedPref.getString("predictionTmin", null);
+                if (s != null)
+                    predictionTmin = s.replace("[", "").replace("]", "").split(", ");
 
-            LineDataSet dataSet3=getDataSet(max, "Max temp "+city);
-            dataSet3.setColor(Color.RED);
-            dataSet3.setValueTextColor(Color.RED);
-            LineDataSet dataSet4=getDataSet(min, "Min temp "+city);
-            dataSet4.setColor(Color.GRAY);
-            dataSet4.setValueTextColor(Color.GRAY);
+                String sM = sharedPref.getString("previousTmax", null);
+                String sm = sharedPref.getString("previousTmin", null);
 
-            lChart.setData(new LineData(dataSet1,dataSet2,dataSet3,dataSet4));
-            previousDataSet1=dataSet3;
-            previousDataSet2=dataSet4;
+                String[] dataMax = sM.replace("[", "").replace("]", "").replace(",", "").split("Entry");
+                String[] dataMin = sm.replace("[", "").replace("]", "").replace(",", "").split("Entry");
+
+                for (int i = 0; i < DAYS; i++) {
+                    String sy = dataMax[i + 1].split("y: ")[1];
+                    String sx = dataMin[i + 1].split("y: ")[1];
+                    int y = (int) Float.parseFloat(sy);
+                    int x = (int) Float.parseFloat(sx);
+
+                    previousTmax.add(new Entry(i, (y)));
+                    previousTmin.add(new Entry(i, (x)));
+                    System.out.println(predictionDate[i] + ":" + predictionTmax[i] + ":" + predictionTmin[i]);
+                }
+
+                previousCity = sharedPref.getString("previousCity", null);
+                actualCity = sharedPref.getString("actualCity", null);
+                previousCheckedIndex = sharedPref.getInt("previousCheckedIndex", -1);
+                lastCheckedIndex = sharedPref.getInt("lastCheckedIndex", -1);
+
+                s = sharedPref.getString("skyStates", null);
+                if (s != null)
+                    skyStates = s.replace("[", "").replace("]", "").split(", ");
+
+                if (previousCity == null) isFirst = true;
+                else isFirst = false;
+
+                setPrediction();
+                communicator.answer(postalCodes[lastCheckedIndex], cities[lastCheckedIndex], skyStates[0]);
+
+            }
         }
 
 
 
-        XAxis xAxis = lChart.getXAxis();
-        xAxis.setPosition(XAxis.XAxisPosition.BOTTOM);
-        xAxis.setDrawGridLines(false);
-        xAxis.setValueFormatter(new DefaultAxisValueFormatter(0){
-            @Override
-            public String getFormattedValue(float value, AxisBase axis) {
-                return dias.get((int)value);
-            }
-        });
-
-        lChart.setScaleX(1);
-        lChart.setVisibleXRange(-1,6);
-        lChart.getAxisLeft().setEnabled(false);
-        lChart.getAxisLeft().setDrawGridLines(false);
-        lChart.getAxisRight().setEnabled(false);
-        lChart.setScaleEnabled(false);
-        lChart.getLegend().setWordWrapEnabled(true);
-        lChart.invalidate();
     }
 
-    public LineDataSet getDataSet( List<Entry> data, String label){
-        LineDataSet dataSet1;
+    @Override
+    public void onStop() {
+        super.onStop();
 
-        dataSet1 = new LineDataSet(data,label);
-        dataSet1.setDrawValues(true);
-        dataSet1.setValueTextSize(10);
-        dataSet1.setDrawCircles(false);
-//        if (first) dataSet1.setColor(R.color.TempMaxBlue);
-        dataSet1.setColor(R.color.TempMaxRed);
-        dataSet1.setMode(LineDataSet.Mode.CUBIC_BEZIER);
-        dataSet1.setHighlightEnabled(false);
+        SharedPreferences sharedPref = getActivity().getPreferences(Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPref.edit();
 
-        return dataSet1;
+//        System.out.println(tab1.weatherArrayAdapter.toString());
+        editor.putString("cities", Arrays.toString(cities));
+        editor.putString("tMax", Arrays.toString(tMax));
+        editor.putString("tMin", Arrays.toString(tMin));
+        editor.putString("postalCodes", Arrays.toString(postalCodes));
+        editor.putString("checks", Arrays.toString(checks));
+        editor.putString("skyStates", Arrays.toString(skyStates));
+
+
+        editor.putBoolean("flagPrediction",flagPrediction);
+        editor.putBoolean("isFirst",isFirst);
+        if(flagPrediction){
+            editor.putString("predictionDate",Arrays.toString(predictionDate));
+            editor.putString("predictionTmax",Arrays.toString(predictionTmax));
+            editor.putString("predictionTmin",Arrays.toString(predictionTmin));
+            editor.putString("previousCity",previousCity);
+            editor.putString("actualCity",actualCity);
+            editor.putInt("previousCheckedIndex",previousCheckedIndex);
+            editor.putInt("lastCheckedIndex",lastCheckedIndex);
+            editor.putString("previousTmax",previousTmax.toString());
+            System.out.println(previousTmax.toString());
+            editor.putString("previousTmin",previousTmin.toString());
+        }
+        editor.commit();
+
     }
-
 }

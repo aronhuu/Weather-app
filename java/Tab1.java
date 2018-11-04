@@ -6,22 +6,17 @@ import android.graphics.Color;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
-import android.util.SparseBooleanArray;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
-import android.widget.CheckBox;
-import android.widget.ImageView;
-import android.widget.LinearLayout;
 import android.widget.ListView;
-import android.widget.RelativeLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.github.mikephil.charting.charts.LineChart;
 import com.github.mikephil.charting.components.AxisBase;
 import com.github.mikephil.charting.components.XAxis;
-import com.github.mikephil.charting.components.YAxis;
 import com.github.mikephil.charting.data.Entry;
 import com.github.mikephil.charting.data.LineData;
 import com.github.mikephil.charting.data.LineDataSet;
@@ -44,11 +39,6 @@ import java.util.List;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 
-
-/**
- * Created by pc on 27/10/2017.
- */
-
 public class Tab1 extends Fragment implements  ListView.OnItemClickListener{
     //Global Constant Values
     final static String XML_TEMPERATURE_SPAIN = "http://www.aemet.es/xml/ccaa/20181026_t_prev_esp.xml";
@@ -59,8 +49,6 @@ public class Tab1 extends Fragment implements  ListView.OnItemClickListener{
     String previousCity, actualCity;
     int previousCheckedIndex, lastCheckedIndex;
     boolean isFirst=true;
-//    LineDataSet previousDataSet1, previousDataSet2;
-
 
     //Elements from the layout
     ListView lv;
@@ -102,11 +90,6 @@ public class Tab1 extends Fragment implements  ListView.OnItemClickListener{
 
         Arrays.fill(checks, Boolean.FALSE);
 
-//        if(cities==null) {
-//            DownloadXML taskDownloadXML = new DownloadXML();
-//            taskDownloadXML.execute(XML_TEMPERATURE_SPAIN);
-//        }
-
         communicator = (Communicator) getActivity();
 
         return view;
@@ -140,7 +123,13 @@ public class Tab1 extends Fragment implements  ListView.OnItemClickListener{
 		weatherArrayAdapter.notifyDataSetChanged();
     }
 
-    //-------------------------Asynctask--------------------------
+    public void refreshInfo() {
+        predictionText.setText("Refreshing weather information");
+        DownloadXML taskDownloadXML = new DownloadXML();
+        taskDownloadXML.execute(XML_TEMPERATURE_SPAIN);
+    }
+
+    //-------------------------Async task--------------------------
     private class DownloadXML extends AsyncTask<String, Void, Void> {
         private String contentType = "";
         @Override
@@ -174,6 +163,7 @@ public class Tab1 extends Fragment implements  ListView.OnItemClickListener{
             }
             else{
                 setPrediction();
+                communicator = (Communicator) getActivity();
                 communicator.answer(postalCodes[lastCheckedIndex], cities[lastCheckedIndex], skyStates[0]);
             }
         }
@@ -369,9 +359,9 @@ public class Tab1 extends Fragment implements  ListView.OnItemClickListener{
     @Override
     public void onResume() {
         super.onResume();
+//        Toast.makeText(getActivity().getApplicationContext(),"Tab1 resumed",Toast.LENGTH_SHORT).show();
 
         SharedPreferences sharedPref = getActivity().getPreferences(Context.MODE_PRIVATE);
-        SharedPreferences.Editor editor = sharedPref.edit();
 
         //Get the cities, tMax, tMin, postalCodes, checks
         String s =sharedPref.getString("cities", null);
@@ -410,7 +400,6 @@ public class Tab1 extends Fragment implements  ListView.OnItemClickListener{
             lv.setOnItemClickListener(Tab1.this);
 
             flagPrediction = sharedPref.getBoolean("flagPrediction", false);
-//        isFirst=sharedPref.getBoolean("isFirst",false);
             if (flagPrediction) {
                 //Get the prediction data
                 s = sharedPref.getString("predictionDate", null);
@@ -422,49 +411,49 @@ public class Tab1 extends Fragment implements  ListView.OnItemClickListener{
                 s = sharedPref.getString("predictionTmin", null);
                 if (s != null)
                     predictionTmin = s.replace("[", "").replace("]", "").split(", ");
-
-                String sM = sharedPref.getString("previousTmax", null);
-                String sm = sharedPref.getString("previousTmin", null);
-
-                String[] dataMax = sM.replace("[", "").replace("]", "").replace(",", "").split("Entry");
-                String[] dataMin = sm.replace("[", "").replace("]", "").replace(",", "").split("Entry");
-
-                for (int i = 0; i < DAYS; i++) {
-                    String sy = dataMax[i + 1].split("y: ")[1];
-                    String sx = dataMin[i + 1].split("y: ")[1];
-                    int y = (int) Float.parseFloat(sy);
-                    int x = (int) Float.parseFloat(sx);
-
-                    previousTmax.add(new Entry(i, (y)));
-                    previousTmin.add(new Entry(i, (x)));
-                    System.out.println(predictionDate[i] + ":" + predictionTmax[i] + ":" + predictionTmin[i]);
-                }
-
-                previousCity = sharedPref.getString("previousCity", null);
-                actualCity = sharedPref.getString("actualCity", null);
-                previousCheckedIndex = sharedPref.getInt("previousCheckedIndex", -1);
-                lastCheckedIndex = sharedPref.getInt("lastCheckedIndex", -1);
-
                 s = sharedPref.getString("skyStates", null);
                 if (s != null)
                     skyStates = s.replace("[", "").replace("]", "").split(", ");
+
+                String sMax = sharedPref.getString("previousTmax", null).replace("[", "").replace("]", "");
+                String sMin = sharedPref.getString("previousTmin", null).replace("[", "").replace("]", "");
+
+                if(!sMax.isEmpty() && !sMin.isEmpty()) {
+                    String[] dataMax = sMax.replace(",", "").split("Entry");
+                    String[] dataMin = sMin.replace(",", "").split("Entry");
+
+                    for (int i = 0; i < DAYS; i++) {
+                        String sy = dataMax[i + 1].split("y: ")[1];
+                        String sx = dataMin[i + 1].split("y: ")[1];
+                        int y = (int) Float.parseFloat(sy);
+                        int x = (int) Float.parseFloat(sx);
+
+                        previousTmax.add(new Entry(i, (y)));
+                        previousTmin.add(new Entry(i, (x)));
+                        System.out.println(predictionDate[i] + ":" + predictionTmax[i] + ":" + predictionTmin[i]);
+                    }
+                    previousCity = sharedPref.getString("previousCity", null);
+                    previousCheckedIndex = sharedPref.getInt("previousCheckedIndex", -1);
+                }
+
+                actualCity = sharedPref.getString("actualCity", null);
+                lastCheckedIndex = sharedPref.getInt("lastCheckedIndex", -1);
 
                 if (previousCity == null) isFirst = true;
                 else isFirst = false;
 
                 setPrediction();
-                communicator.answer(postalCodes[lastCheckedIndex], cities[lastCheckedIndex], skyStates[0]);
-
+                ((MainActivity)getActivity()).setTab1(this);
             }
         }
-
-
-
     }
+
+
 
     @Override
     public void onStop() {
         super.onStop();
+//        Toast.makeText(getActivity().getApplicationContext(),"Tab1 stopped",Toast.LENGTH_SHORT).show();
 
         SharedPreferences sharedPref = getActivity().getPreferences(Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedPref.edit();
@@ -479,7 +468,7 @@ public class Tab1 extends Fragment implements  ListView.OnItemClickListener{
 
 
         editor.putBoolean("flagPrediction",flagPrediction);
-        editor.putBoolean("isFirst",isFirst);
+//        editor.putBoolean("isFirst",isFirst);
         if(flagPrediction){
             editor.putString("predictionDate",Arrays.toString(predictionDate));
             editor.putString("predictionTmax",Arrays.toString(predictionTmax));
@@ -494,5 +483,11 @@ public class Tab1 extends Fragment implements  ListView.OnItemClickListener{
         }
         editor.commit();
 
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+//        Toast.makeText(getActivity().getApplicationContext(),"Tab1 destroyed",Toast.LENGTH_SHORT).show();
     }
 }

@@ -1,26 +1,28 @@
 package com.example.ao.tabapplication;
 
+import android.arch.lifecycle.ViewModelProvider;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.os.Bundle;
 import android.support.design.widget.TabLayout;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
-import android.view.View;
 import android.widget.SearchView;
-import android.widget.Toast;
 
-import java.util.Arrays;
+import com.ToxicBakery.viewpager.transforms.CubeOutTransformer;
 
 public class MainActivity extends AppCompatActivity implements Communicator{
 
     private TabLayout tabLayout;
     private ViewPager viewPager;
-    Tab1 tab1;
-    Tab2 tab2;
+    Tab1 tab1=null;
+    Tab2 tab2=null;
+    private boolean flipped=false;
+    Bundle bundle;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -45,30 +47,36 @@ public class MainActivity extends AppCompatActivity implements Communicator{
 
             }
         });
-        setUpViewPager(viewPager);
-
-//        SharedPreferences sharedPref = getPreferences(Context.MODE_PRIVATE);
-//        SharedPreferences.Editor editor = sharedPref.edit();
-//        String s =sharedPref.getString("cities", null);
-//        if(s!=null)
-//            tab1.setCity(s.replace("[", "").replace("]", "").split(", "));
-//        s =sharedPref.getString("tMax", null);
-//        if(s!=null)
-//            tab1.tMax=s.replace("[", "").replace("]", "").split(", ");
-//        s =sharedPref.getString("tMin", null);
-//        if(s!=null)
-//            tab1.tMin=s.replace("[", "").replace("]", "").split(", ");
-
 
     }
 
     private void setUpViewPager(ViewPager viewPager) {
-        TabViewPagerAdapter tabViewPagerAdapter = new TabViewPagerAdapter(getSupportFragmentManager());
-        tab1 = new Tab1();
-        tab2 = new Tab2();
-        tabViewPagerAdapter.addFragment(tab1, "Weather");
-        tabViewPagerAdapter.addFragment(tab2, "Map");
-        viewPager.setAdapter(tabViewPagerAdapter);
+        if(!flipped) {
+            TabViewPagerAdapter tabViewPagerAdapter = new TabViewPagerAdapter(getSupportFragmentManager());
+            tab1 = new Tab1();
+            tab2 = new Tab2();
+            tabViewPagerAdapter.addFragment(tab1, "Weather");
+            tabViewPagerAdapter.addFragment(tab2, "Map");
+            viewPager.setAdapter(tabViewPagerAdapter);
+            viewPager.setPageTransformer(true, new CubeOutTransformer());
+        }
+
+    }
+
+    public void setTab1(Tab1 t1){
+        if(flipped)
+            tab1=t1;
+    }
+
+    public void setTab2(Tab2 t2){
+        if(flipped) {
+            tab2 = t2;
+            TabViewPagerAdapter tabViewPagerAdapter = new TabViewPagerAdapter(getSupportFragmentManager());
+            tabViewPagerAdapter.addFragment(tab1, "Weather");
+            tabViewPagerAdapter.addFragment(tab2, "Map");
+            viewPager.setAdapter(tabViewPagerAdapter);
+            viewPager.setPageTransformer(true, new CubeOutTransformer());
+        }
 
     }
 
@@ -87,28 +95,72 @@ public class MainActivity extends AppCompatActivity implements Communicator{
 
             @Override
             public boolean onQueryTextChange(String newText) {
-                tab1.weatherArrayAdapter.getFilter().filter(newText);
+                if (tab1!=null)
+                    tab1.weatherArrayAdapter.getFilter().filter(newText);
+                else
+                    System.out.println("Tab1 null");
                 return false;
             }
         });
 
-
         return super.onCreateOptionsMenu(menu);
+    }
+
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()){
+            case R.id.refresh:
+                if (tab1!=null)
+                    tab1.refreshInfo();
+                else
+                    System.out.println("Tab1 null");
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
+
+        }
+
     }
 
     @Override
     public void answer(String lastPostalCode, String lastCityName, String lastSkyState) {
+        tab2.addEntry(lastPostalCode, lastCityName, lastSkyState);
         tab2.setLastPostalCodeOnMap(lastPostalCode, lastCityName, lastSkyState);
     }
-
 
     @Override
     protected void onResume() {
         super.onResume();
+//        Toast.makeText(getApplicationContext(),"Main resumed",Toast.LENGTH_SHORT).show();
+        SharedPreferences sharedPref = getPreferences(Context.MODE_PRIVATE);
+
+        flipped=sharedPref.getBoolean("flipped",false);
+        setUpViewPager(viewPager);
     }
 
     @Override
     protected void onStop() {
         super.onStop();
+//        Toast.makeText(getApplicationContext(),"Main stopped",Toast.LENGTH_SHORT).show();
+        SharedPreferences sharedPref = getPreferences(Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPref.edit();
+        editor.putBoolean("flipped",true);
+        editor.commit();
+    }
+
+    @Override
+    protected void onRestart() {
+        super.onRestart();
+//        Toast.makeText(getApplicationContext(),"Main restart",Toast.LENGTH_SHORT).show();
+
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+//        Toast.makeText(getApplicationContext(),"Main destroyed",Toast.LENGTH_SHORT).show();
+
+
     }
 }

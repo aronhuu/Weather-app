@@ -143,10 +143,7 @@ public class MainActivity extends AppCompatActivity implements Communicator{
     protected void onStop() {
         super.onStop();
 //        Toast.makeText(getApplicationContext(),"Main stopped",Toast.LENGTH_SHORT).show();
-        SharedPreferences sharedPref = getPreferences(Context.MODE_PRIVATE);
-        SharedPreferences.Editor editor = sharedPref.edit();
-        editor.putBoolean("flipped",true);
-        editor.commit();
+
     }
 
     @Override
@@ -159,6 +156,17 @@ public class MainActivity extends AppCompatActivity implements Communicator{
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        SharedPreferences sharedPref = getPreferences(Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPref.edit();
+
+        if (isFinishing()) {
+            //Closing app
+            editor.putBoolean("flipped",false);
+        } else {
+            //It's an orientation change.
+            editor.putBoolean("flipped",true);
+        }
+        editor.commit();
 //        Toast.makeText(getApplicationContext(),"Main destroyed",Toast.LENGTH_SHORT).show();
 
 

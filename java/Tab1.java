@@ -62,7 +62,6 @@ public class Tab1 extends Fragment implements  ListView.OnItemClickListener{
     String[] tMin = new String[NUMBER_CITIES];
     Boolean[] checks = new Boolean[NUMBER_CITIES];
 
-
     //Global arrays for prediction data
     String[] postalCodes = new String[NUMBER_CITIES];
     String[] predictionDate = new String[DAYS];
@@ -226,7 +225,7 @@ public class Tab1 extends Fragment implements  ListView.OnItemClickListener{
             LineDataSet dataSet1 = getDataSet(previousTmax, "Max temp " + previousCity);
             dataSet1.setColor(Color.BLUE);
             dataSet1.setValueTextColor(Color.BLUE);
-            LineDataSet dataSet2 = getDataSet(previousTmin, "Max temp " + previousCity);
+            LineDataSet dataSet2 = getDataSet(previousTmin, "Min temp " + previousCity);
             dataSet2.setColor(Color.MAGENTA);
             dataSet2.setValueTextColor(Color.MAGENTA);
 

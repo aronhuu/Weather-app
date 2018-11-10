@@ -1,4 +1,4 @@
-package com.iot.mdp.weather_app;
+package iot.mdp.weather_app;
 
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
@@ -6,10 +6,6 @@ import android.support.v4.app.FragmentPagerAdapter;
 
 import java.util.ArrayList;
 import java.util.List;
-
-/**
- * Created by pc on 27/10/2017.
- */
 
 public class TabViewPagerAdapter extends FragmentPagerAdapter {
     private final List<Fragment> mFgragmentList = new ArrayList<>();

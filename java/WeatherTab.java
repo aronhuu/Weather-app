@@ -1,4 +1,4 @@
-package com.iot.mdp.weather_app;
+package iot.mdp.weather_app;
 
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -33,6 +33,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
 
 import javax.xml.parsers.DocumentBuilder;
@@ -40,16 +41,17 @@ import javax.xml.parsers.DocumentBuilderFactory;
 
 public class WeatherTab extends Fragment implements  ListView.OnItemClickListener{
     //Global Constant Values
-    final static String XML_TEMPERATURE_SPAIN = "http://www.aemet.es/xml/ccaa/20181026_t_prev_esp.xml";
+    final static String XML_TEMPERATURE_SPAIN = "http://www.aemet.es/xml/ccaa/"+new SimpleDateFormat("yyyyMMdd").format(new Date())+"_t_prev_esp.xml";
     final static int NUMBER_CITIES = 200;
     final static int DAYS = 7;
 
+    //Global Variables
     private boolean flagPrediction;
-    private String previousCity, actualCity;
-    private int previousCheckedIndex, lastCheckedIndex;
-    private boolean isFirst=true;
-    WeatherArrayAdapter weatherArrayAdapter;
+    String previousCity, actualCity;
+    int previousCheckedIndex, lastCheckedIndex;
+    boolean isFirst=true;
     Communicator communicator;
+    WeatherArrayAdapter weatherArrayAdapter;
 
     //Elements from the layout
     ListView lv;
@@ -77,36 +79,37 @@ public class WeatherTab extends Fragment implements  ListView.OnItemClickListene
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 
-        View view = inflater.inflate(com.iot.mdp.weather_app.R.layout.tab1, container, false);
+        View view = inflater.inflate(R.layout.tab1, container, false);
 
-        lv = (ListView)view.findViewById(com.iot.mdp.weather_app.R.id.listView);
-        lChart = (LineChart) view.findViewById(com.iot.mdp.weather_app.R.id.chart);
+        lv = (ListView)view.findViewById(R.id.listView);
+        lChart = (LineChart) view.findViewById(R.id.chart);
         lChart.setNoDataText("Please, select a city and wait");
         lChart.setNoDataTextColor(Color.BLACK);
-        predictionText = (TextView)view.findViewById(com.iot.mdp.weather_app.R.id.prediction);
+        predictionText = (TextView)view.findViewById(R.id.prediction);
         predictionText.setText("Please wait, downloading city information");
 
-        Arrays.fill(checks, Boolean.FALSE); //Initialize to unchecked state
+        Arrays.fill(checks, Boolean.FALSE);//Initialize to unchecked state
 
         communicator = (Communicator) getActivity();
 
         return view;
     }
+
     //-----------------------On click item listener-------------------------
     //Class that download the xml with the cities and the temperatures, AsyncTask
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
 
-        Weather weather=((Weather)lv.getItemAtPosition(position));
-        weather.setCheck();
+        Weather w=((Weather)lv.getItemAtPosition(position));
+        w.setCheck();
 
-        if(weather.getCheck()) {
+        if(w.getCheck()) {
             if(!isFirst){
                 previousCity=actualCity;
                 previousCheckedIndex=lastCheckedIndex;
                 previousTmax=actualTmax;
                 previousTmin=actualTmin;
             }
-            lastCheckedIndex= Arrays.asList(cities).indexOf(weather.getLocation());
+            lastCheckedIndex= Arrays.asList(cities).indexOf(w.getLocation());
             checks[lastCheckedIndex]=!checks[lastCheckedIndex];
             flagPrediction = true;
 
@@ -117,7 +120,6 @@ public class WeatherTab extends Fragment implements  ListView.OnItemClickListene
             DownloadXML taskDownloadXML = new DownloadXML();
             taskDownloadXML.execute("https://www.aemet.es/xml/municipios/localidad_" + postalCodes[lastCheckedIndex] + ".xml");
         }
-
         //Notify that the state has changed after clicking on the item
 		weatherArrayAdapter.notifyDataSetChanged();
     }
@@ -140,7 +142,7 @@ public class WeatherTab extends Fragment implements  ListView.OnItemClickListene
                 URL url = new URL(urls[0]);
                 urlConnection = (HttpURLConnection) url.openConnection();
                 contentType = urlConnection.getContentType();
-                if (contentType.toString().contains("xml")) {
+                if (contentType.contains("xml")) {
                     is = urlConnection.getInputStream();
                     xmlParser(is);
                 }
@@ -246,6 +248,7 @@ public class WeatherTab extends Fragment implements  ListView.OnItemClickListene
                 predictionText.setText("7 days prediction of " + previousCity + " and " + actualCity);
                 lChart.setData(new LineData(dataSet1,dataSet2,dataSet3,dataSet4));
             }
+
         }
     }
 
@@ -256,8 +259,6 @@ public class WeatherTab extends Fragment implements  ListView.OnItemClickListene
         dataSet1.setDrawValues(true);
         dataSet1.setValueTextSize(10);
         dataSet1.setDrawCircles(false);
-//        if (first) dataSet1.setColor(R.color.TempMaxBlue);
-        dataSet1.setColor(com.iot.mdp.weather_app.R.color.TempMaxRed);
         dataSet1.setMode(LineDataSet.Mode.CUBIC_BEZIER);
         dataSet1.setHighlightEnabled(false);
 
@@ -360,27 +361,31 @@ public class WeatherTab extends Fragment implements  ListView.OnItemClickListene
     @Override
     public void onResume() {
         super.onResume();
-//        Toast.makeText(getActivity().getApplicationContext(),"WeatherTab resumed",Toast.LENGTH_SHORT).show();
+//        Toast.makeText(getActivity().getApplicationContext(),"Tab1 resumed",Toast.LENGTH_SHORT).show();
 
         SharedPreferences sharedPref = getActivity().getPreferences(Context.MODE_PRIVATE);
 
-        //Get the cities, tMax, tMin, postalCodes, checks
+        //Parsing the cities information if it is stored in the preferences
         String s =sharedPref.getString("cities", null);
         if(s!=null)
             cities=s.replace("[", "").replace("]", "").split(", ");
 
+        //Parsing the maximum temperature prediction information if it is stored in the preferences
         s =sharedPref.getString("tMax", null);
         if(s!=null)
             tMax=s.replace("[", "").replace("]", "").split(", ");
 
+        //Parsing the  minimum temperature prediction information if it is stored in the preferences
         s =sharedPref.getString("tMin", null);
         if(s!=null)
             tMin=s.replace("[", "").replace("]", "").split(", ");
 
+        //Parsing the cities postal code information if it is stored in the preferences
         s =sharedPref.getString("postalCodes", null);
         if(s!=null)
             postalCodes=s.replace("[", "").replace("]", "").split(", ");
 
+        //Parsing the check state of the cities if it is stored in the preferences
         s =sharedPref.getString("checks", null);
         if(s!=null) {
             String [] sa=s.replace("[", "").replace("]", "").split(", ");
@@ -440,8 +445,7 @@ public class WeatherTab extends Fragment implements  ListView.OnItemClickListene
                 actualCity = sharedPref.getString("actualCity", null);
                 lastCheckedIndex = sharedPref.getInt("lastCheckedIndex", -1);
 
-                if (previousCity == null) isFirst = true;
-                else isFirst = false;
+                isFirst = previousCity == null;
 
                 setPrediction();
                 ((MainActivity)getActivity()).setWeatherTab(this);
@@ -454,12 +458,10 @@ public class WeatherTab extends Fragment implements  ListView.OnItemClickListene
     @Override
     public void onStop() {
         super.onStop();
-//        Toast.makeText(getActivity().getApplicationContext(),"WeatherTab stopped",Toast.LENGTH_SHORT).show();
 
         SharedPreferences sharedPref = getActivity().getPreferences(Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedPref.edit();
 
-//        System.out.println(tab1.weatherArrayAdapter.toString());
         editor.putString("cities", Arrays.toString(cities));
         editor.putString("tMax", Arrays.toString(tMax));
         editor.putString("tMin", Arrays.toString(tMin));
@@ -486,4 +488,9 @@ public class WeatherTab extends Fragment implements  ListView.OnItemClickListene
 
     }
 
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+//        Toast.makeText(getActivity().getApplicationContext(),"Tab1 destroyed",Toast.LENGTH_SHORT).show();
+    }
 }

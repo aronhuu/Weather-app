@@ -1,4 +1,4 @@
-package com.iot.mdp.weather_app;
+package iot.mdp.weather_app;
 
 import java.util.ArrayList;
 

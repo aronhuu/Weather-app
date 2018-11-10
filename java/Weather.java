@@ -1,4 +1,4 @@
-package com.iot.mdp.weather_app;
+package iot.mdp.weather_app;
 
 public class Weather {
     private String maxTemp, minTemp;//Temperature of the city

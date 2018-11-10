@@ -1,9 +1,12 @@
-package com.iot.mdp.weather_app;
+package iot.mdp.weather_app;
 
+import android.arch.lifecycle.ViewModelProvider;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.design.widget.TabLayout;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentTransaction;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.view.Menu;
@@ -22,18 +25,19 @@ public class MainActivity extends AppCompatActivity implements Communicator{
     private MapTab mapTab = null;
     private boolean flipped = false;  //Flag that indicates if the phone has already changed its orientation
 
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(com.iot.mdp.weather_app.R.layout.activity_main);
+        setContentView(R.layout.activity_main);
 
         //Find objects from the layout
-        tabLayout = (TabLayout) findViewById(com.iot.mdp.weather_app.R.id.tabLayout);
-        viewPager = (ViewPager) findViewById(com.iot.mdp.weather_app.R.id.viewPager);
+        tabLayout = (TabLayout) findViewById(R.id.tabLayout);
+        viewPager = (ViewPager) findViewById(R.id.viewPager);
 
         //Associating the tablayout with the viewpager
         tabLayout.setupWithViewPager(viewPager);
-        //Listener for clicking on the tab
         tabLayout.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
             @Override
             public void onTabSelected(TabLayout.Tab tab) {
@@ -66,13 +70,12 @@ public class MainActivity extends AppCompatActivity implements Communicator{
         }
 
     }
-
     //----------------------Menu bar functions--------------------------
-    @Override
+        @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater inflater = getMenuInflater();
-        inflater.inflate(com.iot.mdp.weather_app.R.menu.menu_search, menu);
-        MenuItem item = menu.findItem(com.iot.mdp.weather_app.R.id.menuSearch);
+        inflater.inflate(R.menu.menu_search, menu);
+        MenuItem item = menu.findItem(R.id.menuSearch);
         SearchView searchView = (SearchView) item.getActionView();
 
         //Listener for the searchview to filter the data of the listview
@@ -84,7 +87,7 @@ public class MainActivity extends AppCompatActivity implements Communicator{
 
             @Override
             public boolean onQueryTextChange(String newText) {
-                if (weatherTab !=null)
+                if (weatherTab!=null)
                     weatherTab.weatherArrayAdapter.getFilter().filter(newText);
                 else
                     System.out.println("WeatherTab null");
@@ -95,12 +98,13 @@ public class MainActivity extends AppCompatActivity implements Communicator{
         return super.onCreateOptionsMenu(menu);
     }
 
+
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()){
-            case com.iot.mdp.weather_app.R.id.refresh:
+            case R.id.refresh:
                 //Refresh the information of the listview, downloading again the xml files
-                if (weatherTab !=null)
+                if (weatherTab!=null)
                     weatherTab.refreshInfo();
                 else
                     System.out.println("WeatherTab null");
@@ -114,25 +118,22 @@ public class MainActivity extends AppCompatActivity implements Communicator{
 
     //----------------------Communicator interface--------------------------
     @Override
-    //Interface function to communicate between tabs
     public void answer(String lastPostalCode, String lastCityName, String lastSkyState) {
-        //Store the selected cities information and sky states
         mapTab.addEntry(lastPostalCode, lastCityName, lastSkyState);
-        //Set the current selected city with the sky state marker on the map
         mapTab.setLastPostalCodeOnMap(lastPostalCode, lastCityName, lastSkyState);
     }
 
     //----------------------Tab communication functions--------------------------
-    public void setWeatherTab(WeatherTab t1){
+    public void setWeatherTab(WeatherTab tab1){
         if(flipped)
             //to redirect the pointer of the weather tab when the fragment has recreated
-            weatherTab =t1;
+            weatherTab=tab1;
     }
 
-    public void setMapTab(MapTab t2){
+    public void setMapTab(MapTab tab2){
         if(flipped) {
             //to redirect the pointer of the map tab when the fragment has recreated
-            mapTab = t2;
+            mapTab = tab2;
             //adding to the viewpager
             TabViewPagerAdapter tabViewPagerAdapter = new TabViewPagerAdapter(getSupportFragmentManager());
             tabViewPagerAdapter.addFragment(weatherTab, "Weather");
@@ -142,6 +143,7 @@ public class MainActivity extends AppCompatActivity implements Communicator{
         }
 
     }
+
     //----------------------Lifecycle functions--------------------------
     @Override
     protected void onResume() {
@@ -160,7 +162,7 @@ public class MainActivity extends AppCompatActivity implements Communicator{
         SharedPreferences.Editor editor = sharedPref.edit();
 
         if (isFinishing()) {
-            //Closing the app
+            //Closing app
             editor.putBoolean("flipped",false);
         } else {
             //It's an orientation change.

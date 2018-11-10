@@ -1,4 +1,4 @@
-package com.iot.mdp.weather_app;
+package iot.mdp.weather_app;
 
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -39,9 +39,9 @@ public class MapTab extends Fragment {
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        View rootView = inflater.inflate(com.iot.mdp.weather_app.R.layout.tab2, container, false);
+        View rootView = inflater.inflate(R.layout.tab2, container, false);
 
-        mMapView = (MapView) rootView.findViewById(com.iot.mdp.weather_app.R.id.mapView);
+        mMapView = (MapView) rootView.findViewById(R.id.mapView);
         mMapView.onCreate(savedInstanceState);
         mMapView.onResume(); // needed to get the map to display immediately
         try {
@@ -62,6 +62,7 @@ public class MapTab extends Fragment {
                         setLastPostalCodeOnMap(codes.get(i), cities.get(i), states.get(i));
                     }
                 }
+
             }
         });
 
@@ -80,6 +81,7 @@ public class MapTab extends Fragment {
 
                 if (addresses != null && !addresses.isEmpty()) {
                     Address address = addresses.get(0);
+
                     LatLng place = new LatLng(address.getLatitude(), address.getLongitude());
 
                     mMap.addMarker(new MarkerOptions().position(place).title(lastCityName).icon(BitmapDescriptorFactory.fromBitmap(resizeMapIcons(selectIcon(lastSkyState), 100, 100))));
@@ -102,36 +104,36 @@ public class MapTab extends Fragment {
         Bitmap bitmap;
         if (lastSkyState.contains("nuboso")) {
             if (lastSkyState.contains("luvia")) {
-                bitmap = BitmapFactory.decodeResource(getResources(), com.iot.mdp.weather_app.R.drawable.nublado_precipitaciones_debiles);
+                bitmap = BitmapFactory.decodeResource(getResources(), R.drawable.nublado_precipitaciones_debiles);
             }
             else {
                 if (lastSkyState.contains("nieve")) {
-                    bitmap = BitmapFactory.decodeResource(getResources(), com.iot.mdp.weather_app.R.drawable.nublado_con_nieve);
+                    bitmap = BitmapFactory.decodeResource(getResources(), R.drawable.nublado_con_nieve);
                 }
                 else{
                     if (lastSkyState.contains("tormenta")) {
-                        bitmap = BitmapFactory.decodeResource(getResources(), com.iot.mdp.weather_app.R.drawable.nublado_precipitaciones_tormenta);
+                        bitmap = BitmapFactory.decodeResource(getResources(), R.drawable.nublado_precipitaciones_tormenta);
                     }
                     else{
                         if (lastSkyState.contains("Poco")) {
-                            bitmap = BitmapFactory.decodeResource(getResources(), com.iot.mdp.weather_app.R.drawable.poco_nublado);
+                            bitmap = BitmapFactory.decodeResource(getResources(), R.drawable.poco_nublado);
                         }
                         else{
-                            bitmap = BitmapFactory.decodeResource(getResources(), com.iot.mdp.weather_app.R.drawable.nublado);
+                            bitmap = BitmapFactory.decodeResource(getResources(), R.drawable.nublado);
                         }
                     }
                 }
             }
         }else{
             if (lastSkyState.contains("tormenta")) {
-                bitmap = BitmapFactory.decodeResource(getResources(), com.iot.mdp.weather_app.R.drawable.storm);
+                bitmap = BitmapFactory.decodeResource(getResources(), R.drawable.storm);
             }
             else{
                 if (lastSkyState.contains("despejado")) {
-                    bitmap = BitmapFactory.decodeResource(getResources(), com.iot.mdp.weather_app.R.drawable.despejado);
+                    bitmap = BitmapFactory.decodeResource(getResources(), R.drawable.despejado);
                 }
                 else{
-                    bitmap = BitmapFactory.decodeResource(getResources(), com.iot.mdp.weather_app.R.drawable.unknown);
+                    bitmap = BitmapFactory.decodeResource(getResources(), R.drawable.unknown);
                 }
             }
 
@@ -170,6 +172,7 @@ public class MapTab extends Fragment {
             if(!s.isEmpty())
                 states=new ArrayList<String>(Arrays.asList(s.replace("[", "").replace("]", "").split(", ")));
 
+
     }
 
     //Function to add the last city information to the record of city information
@@ -199,6 +202,7 @@ public class MapTab extends Fragment {
         SharedPreferences sharedPref = getActivity().getPreferences(Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedPref.edit();
 
+        System.out.println(codes.toString());
         editor.putString("MapCodes", codes.toString());
         editor.putString("MapCities", cities.toString());
         editor.putString("MapStates", states.toString());
@@ -209,6 +213,7 @@ public class MapTab extends Fragment {
     @Override
     public void onDestroy() {
         super.onDestroy();
+//        Toast.makeText(getActivity().getApplicationContext(),"Tab2 destroyed",Toast.LENGTH_SHORT).show();
         mMapView.onDestroy();
     }
 

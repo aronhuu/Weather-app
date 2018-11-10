@@ -1,4 +1,4 @@
-package com.example.ao.tabapplication;
+package com.iot.mdp.weather_app;
 
 import android.content.Context;
 import android.view.LayoutInflater;
@@ -25,7 +25,6 @@ public class WeatherArrayAdapter extends ArrayAdapter <Weather> implements Filte
         originalData = weathers;
         filteredData=weathers;
         mContext = context;
-//        inflater = (LayoutInflater) mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         inflater  = LayoutInflater.from(context);
     }
 
@@ -38,7 +37,6 @@ public class WeatherArrayAdapter extends ArrayAdapter <Weather> implements Filte
             newView = inflater.inflate(R.layout.weather_list_item, parent, false);
         }
 
-        ImageView imageView = (ImageView) newView.findViewById(R.id.imgView);
         TextView max    = (TextView) newView.findViewById(R.id.maxTemp);
         TextView min = (TextView) newView.findViewById(R.id.minTemp);
         TextView loc = (TextView) newView.findViewById(R.id.location);

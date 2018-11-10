@@ -1,4 +1,4 @@
-package com.example.ao.tabapplication;
+package com.iot.mdp.weather_app;
 
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -27,20 +27,21 @@ import java.util.Arrays;
 import java.util.List;
 
 
-public class Tab2 extends Fragment {
+public class MapTab extends Fragment {
 
+    //Global variables
     MapView mMapView;
     private GoogleMap mMap;
-    private List<String> codes = new ArrayList<String>();
-    private List<String> cities = new ArrayList<String>();
-    private List<String> states = new ArrayList<String>();
+    private List<String> codes = new ArrayList<String>();   //Array to store the record of selected cities postal code
+    private List<String> cities = new ArrayList<String>();  //Array to store the record of selected cities name
+    private List<String> states = new ArrayList<String>();  //Array to store the record of selected cities' sky state
 
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        View rootView = inflater.inflate(R.layout.tab2, container, false);
+        View rootView = inflater.inflate(com.iot.mdp.weather_app.R.layout.tab2, container, false);
 
-        mMapView = (MapView) rootView.findViewById(R.id.mapView);
+        mMapView = (MapView) rootView.findViewById(com.iot.mdp.weather_app.R.id.mapView);
         mMapView.onCreate(savedInstanceState);
         mMapView.onResume(); // needed to get the map to display immediately
         try {
@@ -53,19 +54,21 @@ public class Tab2 extends Fragment {
             @Override
             public void onMapReady(GoogleMap googleMap) {
                 mMap = googleMap;
-                ((MainActivity)getActivity()).setTab2(Tab2.this);
+                //when the map is ready, inform the main activity and redirecting the pointer of the map tab
+                ((MainActivity)getActivity()).setMapTab(MapTab.this);
+                //then redraw the markers on the map with the record of the cities
                 if(!codes.isEmpty()){
                     for(int i=0; i<codes.size();i++){
                         setLastPostalCodeOnMap(codes.get(i), cities.get(i), states.get(i));
                     }
                 }
-
             }
         });
 
         return rootView;
     }
 
+    //----------------------Map action functions--------------------------
     void setLastPostalCodeOnMap(String lastPostalCode, String lastCityName, String lastSkyState) {
         if (mMap != null) {
 
@@ -77,10 +80,7 @@ public class Tab2 extends Fragment {
 
                 if (addresses != null && !addresses.isEmpty()) {
                     Address address = addresses.get(0);
-
                     LatLng place = new LatLng(address.getLatitude(), address.getLongitude());
-
-                    //googleMap.addMarker(new MarkerOptions().position(place).title("Marker in "));
 
                     mMap.addMarker(new MarkerOptions().position(place).title(lastCityName).icon(BitmapDescriptorFactory.fromBitmap(resizeMapIcons(selectIcon(lastSkyState), 100, 100))));
                     mMap.moveCamera(CameraUpdateFactory.newLatLng(place));
@@ -97,40 +97,41 @@ public class Tab2 extends Fragment {
         }
     }
 
+    // Function that returns the corresponding icon to a sky state
     public Bitmap selectIcon(String lastSkyState){
         Bitmap bitmap;
         if (lastSkyState.contains("nuboso")) {
             if (lastSkyState.contains("luvia")) {
-                bitmap = BitmapFactory.decodeResource(getResources(), R.drawable.nublado_precipitaciones_debiles);
+                bitmap = BitmapFactory.decodeResource(getResources(), com.iot.mdp.weather_app.R.drawable.nublado_precipitaciones_debiles);
             }
             else {
                 if (lastSkyState.contains("nieve")) {
-                    bitmap = BitmapFactory.decodeResource(getResources(), R.drawable.nublado_con_nieve);
+                    bitmap = BitmapFactory.decodeResource(getResources(), com.iot.mdp.weather_app.R.drawable.nublado_con_nieve);
                 }
                 else{
                     if (lastSkyState.contains("tormenta")) {
-                        bitmap = BitmapFactory.decodeResource(getResources(), R.drawable.nublado_precipitaciones_tormenta);
+                        bitmap = BitmapFactory.decodeResource(getResources(), com.iot.mdp.weather_app.R.drawable.nublado_precipitaciones_tormenta);
                     }
                     else{
                         if (lastSkyState.contains("Poco")) {
-                            bitmap = BitmapFactory.decodeResource(getResources(), R.drawable.poco_nublado);
+                            bitmap = BitmapFactory.decodeResource(getResources(), com.iot.mdp.weather_app.R.drawable.poco_nublado);
                         }
                         else{
-                            bitmap = BitmapFactory.decodeResource(getResources(), R.drawable.nublado);
+                            bitmap = BitmapFactory.decodeResource(getResources(), com.iot.mdp.weather_app.R.drawable.nublado);
                         }
                     }
                 }
             }
         }else{
             if (lastSkyState.contains("tormenta")) {
-                bitmap = BitmapFactory.decodeResource(getResources(), R.drawable.storm);
+                bitmap = BitmapFactory.decodeResource(getResources(), com.iot.mdp.weather_app.R.drawable.storm);
             }
             else{
                 if (lastSkyState.contains("despejado")) {
-                    bitmap = BitmapFactory.decodeResource(getResources(), R.drawable.despejado);
+                    bitmap = BitmapFactory.decodeResource(getResources(), com.iot.mdp.weather_app.R.drawable.despejado);
                 }
                 else{
-                    bitmap = BitmapFactory.decodeResource(getResources(), R.drawable.unknown);
+                    bitmap = BitmapFactory.decodeResource(getResources(), com.iot.mdp.weather_app.R.drawable.unknown);
                 }
             }
 
@@ -139,36 +140,39 @@ public class Tab2 extends Fragment {
         return bitmap;
     }
 
+    //Function that resizes the icon
     public Bitmap resizeMapIcons(Bitmap bitmap, int width, int height){
         Bitmap resizedBitmap = Bitmap.createScaledBitmap(bitmap, width, height, false);
         return resizedBitmap;
     }
 
+    //----------------------Lifecycle functions--------------------------
     @Override
     public void onResume() {
         super.onResume();
         mMapView.onResume();
-//        Toast.makeText(getActivity().getApplicationContext(),"Tab2 resumed",Toast.LENGTH_SHORT).show();
 
         SharedPreferences sharedPref = getActivity().getPreferences(Context.MODE_PRIVATE);
 
-        //Get the cities, tMax, tMin, postalCodes, checks
-
+        //Parsing the cities postal code information if it is stored in the preferences
         String s =sharedPref.getString("MapCodes", null);
         if(s!=null)
             if(!s.isEmpty())
                 codes=new ArrayList<String>(Arrays.asList(s.replace("[", "").replace("]", "").split(", ")));
+        //Parsing the cities name information if it is stored in the preferences
         s =sharedPref.getString("MapCities", null);
         if(s!=null)
             if(!s.isEmpty())
                 cities=new ArrayList<String>(Arrays.asList(s.replace("[", "").replace("]", "").split(", ")));
+        //Parsing the sky states information if it is stored in the preferences
         s =sharedPref.getString("MapStates", null);
         if(s!=null)
             if(!s.isEmpty())
                 states=new ArrayList<String>(Arrays.asList(s.replace("[", "").replace("]", "").split(", ")));
 
-
     }
+
+    //Function to add the last city information to the record of city information
     public void addEntry(String lastPostalCode, String lastCityName, String lastSkyState){
         codes.add(lastPostalCode);
         cities.add(lastCityName);
@@ -190,11 +194,11 @@ public class Tab2 extends Fragment {
     @Override
     public void onStop() {
         super.onStop();
-//        Toast.makeText(getActivity().getApplicationContext(),"Tab2 stopped",Toast.LENGTH_SHORT).show();
+
+        //Store the record of selected cities information in the preferences
         SharedPreferences sharedPref = getActivity().getPreferences(Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedPref.edit();
 
-        System.out.println(codes.toString());
         editor.putString("MapCodes", codes.toString());
         editor.putString("MapCities", cities.toString());
         editor.putString("MapStates", states.toString());
@@ -205,7 +209,6 @@ public class Tab2 extends Fragment {
     @Override
     public void onDestroy() {
         super.onDestroy();
-//        Toast.makeText(getActivity().getApplicationContext(),"Tab2 destroyed",Toast.LENGTH_SHORT).show();
         mMapView.onDestroy();
     }
 

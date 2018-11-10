@@ -1,4 +1,4 @@
-package com.example.ao.tabapplication;
+package com.iot.mdp.weather_app;
 
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -12,7 +12,6 @@ import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.github.mikephil.charting.charts.LineChart;
 import com.github.mikephil.charting.components.AxisBase;
@@ -39,24 +38,25 @@ import java.util.List;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 
-public class Tab1 extends Fragment implements  ListView.OnItemClickListener{
+public class WeatherTab extends Fragment implements  ListView.OnItemClickListener{
     //Global Constant Values
     final static String XML_TEMPERATURE_SPAIN = "http://www.aemet.es/xml/ccaa/20181026_t_prev_esp.xml";
     final static int NUMBER_CITIES = 200;
     final static int DAYS = 7;
 
     private boolean flagPrediction;
-    String previousCity, actualCity;
-    int previousCheckedIndex, lastCheckedIndex;
-    boolean isFirst=true;
+    private String previousCity, actualCity;
+    private int previousCheckedIndex, lastCheckedIndex;
+    private boolean isFirst=true;
+    WeatherArrayAdapter weatherArrayAdapter;
+    Communicator communicator;
 
     //Elements from the layout
     ListView lv;
     LineChart lChart;
     TextView predictionText;
-    WeatherArrayAdapter weatherArrayAdapter;
 
-    //Global arrays to save the values for the lv
+    //Global arrays to save the values for the listview
     String[] cities = null;
     String[] tMax = new String[NUMBER_CITIES];
     String[] tMin = new String[NUMBER_CITIES];
@@ -73,44 +73,43 @@ public class Tab1 extends Fragment implements  ListView.OnItemClickListener{
     String[] predictionTmin = new String[DAYS];
     String[] skyStates = new String[DAYS];
 
-    Communicator communicator;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 
-        View view = inflater.inflate(R.layout.tab1, container, false);
+        View view = inflater.inflate(com.iot.mdp.weather_app.R.layout.tab1, container, false);
 
-        lv = (ListView)view.findViewById(R.id.listView);
-        lChart = (LineChart) view.findViewById(R.id.chart);
+        lv = (ListView)view.findViewById(com.iot.mdp.weather_app.R.id.listView);
+        lChart = (LineChart) view.findViewById(com.iot.mdp.weather_app.R.id.chart);
         lChart.setNoDataText("Please, select a city and wait");
         lChart.setNoDataTextColor(Color.BLACK);
-        predictionText = (TextView)view.findViewById(R.id.prediction);
+        predictionText = (TextView)view.findViewById(com.iot.mdp.weather_app.R.id.prediction);
         predictionText.setText("Please wait, downloading city information");
 
-        Arrays.fill(checks, Boolean.FALSE);
+        Arrays.fill(checks, Boolean.FALSE); //Initialize to unchecked state
 
         communicator = (Communicator) getActivity();
 
         return view;
     }
-
+    //-----------------------On click item listener-------------------------
     //Class that download the xml with the cities and the temperatures, AsyncTask
-
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
 
-        Weather w=((Weather)lv.getItemAtPosition(position));
-        w.setCheck();
+        Weather weather=((Weather)lv.getItemAtPosition(position));
+        weather.setCheck();
 
-        if(w.getCheck()) {
+        if(weather.getCheck()) {
             if(!isFirst){
                 previousCity=actualCity;
                 previousCheckedIndex=lastCheckedIndex;
                 previousTmax=actualTmax;
                 previousTmin=actualTmin;
             }
-            lastCheckedIndex= Arrays.asList(cities).indexOf(w.getLocation());
+            lastCheckedIndex= Arrays.asList(cities).indexOf(weather.getLocation());
             checks[lastCheckedIndex]=!checks[lastCheckedIndex];
             flagPrediction = true;
+
             //Download the prediction xml of the selected city
             actualCity=cities[lastCheckedIndex];
             predictionText.setText("Please wait" );
@@ -119,16 +118,18 @@ public class Tab1 extends Fragment implements  ListView.OnItemClickListener{
             taskDownloadXML.execute("https://www.aemet.es/xml/municipios/localidad_" + postalCodes[lastCheckedIndex] + ".xml");
         }
 
+        //Notify that the state has changed after clicking on the item
 		weatherArrayAdapter.notifyDataSetChanged();
     }
 
+    //Updating the information of the listview downloading from the source
     public void refreshInfo() {
         predictionText.setText("Refreshing weather information");
         DownloadXML taskDownloadXML = new DownloadXML();
         taskDownloadXML.execute(XML_TEMPERATURE_SPAIN);
     }
 
-    //-------------------------Async task--------------------------
+    //-----------------------Async task to download data--------------------------
     private class DownloadXML extends AsyncTask<String, Void, Void> {
         private String contentType = "";
         @Override
@@ -158,7 +159,7 @@ public class Tab1 extends Fragment implements  ListView.OnItemClickListener{
                 weatherArrayAdapter = new WeatherArrayAdapter(getContext(), weatherData.getWeatherList());
                 lv.setAdapter(weatherArrayAdapter);
                 lv.setChoiceMode(ListView.CHOICE_MODE_MULTIPLE);
-                lv.setOnItemClickListener(Tab1.this);
+                lv.setOnItemClickListener(WeatherTab.this);
             }
             else{
                 setPrediction();
@@ -168,6 +169,7 @@ public class Tab1 extends Fragment implements  ListView.OnItemClickListener{
         }
     }
 
+    //----------------------Plotting the prediction on chart--------------------------
     public void setPrediction(){
         SimpleDateFormat inFormat = new SimpleDateFormat("yyyy-MM-dd");
         final List<String> dias = new ArrayList<>();
@@ -210,6 +212,7 @@ public class Tab1 extends Fragment implements  ListView.OnItemClickListener{
         lChart.invalidate();
     }
 
+    //Setting the datasets on the chart
     public void setChart() {
         if(isFirst){//If it's the first time to plot a prediction
             predictionText.setText("7 days prediction of " + actualCity );
@@ -243,7 +246,6 @@ public class Tab1 extends Fragment implements  ListView.OnItemClickListener{
                 predictionText.setText("7 days prediction of " + previousCity + " and " + actualCity);
                 lChart.setData(new LineData(dataSet1,dataSet2,dataSet3,dataSet4));
             }
-
         }
     }
 
@@ -255,14 +257,14 @@ public class Tab1 extends Fragment implements  ListView.OnItemClickListener{
         dataSet1.setValueTextSize(10);
         dataSet1.setDrawCircles(false);
 //        if (first) dataSet1.setColor(R.color.TempMaxBlue);
-        dataSet1.setColor(R.color.TempMaxRed);
+        dataSet1.setColor(com.iot.mdp.weather_app.R.color.TempMaxRed);
         dataSet1.setMode(LineDataSet.Mode.CUBIC_BEZIER);
         dataSet1.setHighlightEnabled(false);
 
         return dataSet1;
     }
 
-    //-------------------------xmlParser--------------------------
+    //-------------------------xml Parser--------------------------
     //Method that modifies the global arrays with the information of the xml
     public void xmlParser(InputStream is) {
         Document document;
@@ -354,11 +356,11 @@ public class Tab1 extends Fragment implements  ListView.OnItemClickListener{
         }
     }
 
-
+    //----------------------Lifecycle functions--------------------------
     @Override
     public void onResume() {
         super.onResume();
-//        Toast.makeText(getActivity().getApplicationContext(),"Tab1 resumed",Toast.LENGTH_SHORT).show();
+//        Toast.makeText(getActivity().getApplicationContext(),"WeatherTab resumed",Toast.LENGTH_SHORT).show();
 
         SharedPreferences sharedPref = getActivity().getPreferences(Context.MODE_PRIVATE);
 
@@ -396,7 +398,7 @@ public class Tab1 extends Fragment implements  ListView.OnItemClickListener{
             weatherArrayAdapter = new WeatherArrayAdapter(getContext(), new WeatherData(checks, cities, tMax, tMin).getWeatherList());
             lv.setAdapter(weatherArrayAdapter);
             lv.setChoiceMode(ListView.CHOICE_MODE_MULTIPLE);
-            lv.setOnItemClickListener(Tab1.this);
+            lv.setOnItemClickListener(WeatherTab.this);
 
             flagPrediction = sharedPref.getBoolean("flagPrediction", false);
             if (flagPrediction) {
@@ -442,7 +444,7 @@ public class Tab1 extends Fragment implements  ListView.OnItemClickListener{
                 else isFirst = false;
 
                 setPrediction();
-                ((MainActivity)getActivity()).setTab1(this);
+                ((MainActivity)getActivity()).setWeatherTab(this);
             }
         }
     }
@@ -452,7 +454,7 @@ public class Tab1 extends Fragment implements  ListView.OnItemClickListener{
     @Override
     public void onStop() {
         super.onStop();
-//        Toast.makeText(getActivity().getApplicationContext(),"Tab1 stopped",Toast.LENGTH_SHORT).show();
+//        Toast.makeText(getActivity().getApplicationContext(),"WeatherTab stopped",Toast.LENGTH_SHORT).show();
 
         SharedPreferences sharedPref = getActivity().getPreferences(Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedPref.edit();
@@ -484,9 +486,4 @@ public class Tab1 extends Fragment implements  ListView.OnItemClickListener{
 
     }
 
-    @Override
-    public void onDestroy() {
-        super.onDestroy();
-//        Toast.makeText(getActivity().getApplicationContext(),"Tab1 destroyed",Toast.LENGTH_SHORT).show();
-    }
 }

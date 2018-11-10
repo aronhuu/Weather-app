@@ -1,6 +1,4 @@
-package com.example.ao.tabapplication;
-
-import com.example.ao.tabapplication.Weather;
+package com.iot.mdp.weather_app;
 
 import java.util.ArrayList;
 

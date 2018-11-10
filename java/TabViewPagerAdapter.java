@@ -1,4 +1,4 @@
-package com.example.ao.tabapplication;
+package com.iot.mdp.weather_app;
 
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;

@@ -1,20 +1,15 @@
-package com.example.ao.tabapplication;
+package com.iot.mdp.weather_app;
 
 public class Weather {
-    private int imageResource;
-    private String maxTemp, minTemp;
-    private String location;
-    private boolean check=false;
+    private String maxTemp, minTemp;//Temperature of the city
+    private String location;        //The city name
+    private boolean check=false;    //If the item is checked
 
     public Weather(boolean c, String max, String min, String loc){
         check = c;
         maxTemp = max;
         minTemp = min;
         location = loc;
-    }
-
-    public int getImageResource() {
-        return imageResource;
     }
 
     public String getMaxTemp() {
@@ -27,7 +22,7 @@ public class Weather {
 
     public String getLocation() { return location;}
 	
-	    public boolean setCheck(){
+    public boolean setCheck(){
         check=!check;
         return check;
     }

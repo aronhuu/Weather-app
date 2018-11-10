@@ -1,6 +1,5 @@
-package com.example.ao.tabapplication;
+package com.iot.mdp.weather_app;
 
-import android.arch.lifecycle.ViewModelProvider;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Bundle;
@@ -16,21 +15,25 @@ import com.ToxicBakery.viewpager.transforms.CubeOutTransformer;
 
 public class MainActivity extends AppCompatActivity implements Communicator{
 
+    //Global Variables
     private TabLayout tabLayout;
     private ViewPager viewPager;
-    Tab1 tab1=null;
-    Tab2 tab2=null;
-    private boolean flipped=false;
-    Bundle bundle;
-
+    private WeatherTab weatherTab = null;
+    private MapTab mapTab = null;
+    private boolean flipped = false;  //Flag that indicates if the phone has already changed its orientation
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
-        tabLayout = (TabLayout) findViewById(R.id.tabLayout);
-        viewPager = (ViewPager) findViewById(R.id.viewPager);
+        setContentView(com.iot.mdp.weather_app.R.layout.activity_main);
+
+        //Find objects from the layout
+        tabLayout = (TabLayout) findViewById(com.iot.mdp.weather_app.R.id.tabLayout);
+        viewPager = (ViewPager) findViewById(com.iot.mdp.weather_app.R.id.viewPager);
+
+        //Associating the tablayout with the viewpager
         tabLayout.setupWithViewPager(viewPager);
+        //Listener for clicking on the tab
         tabLayout.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
             @Override
             public void onTabSelected(TabLayout.Tab tab) {
@@ -52,41 +55,27 @@ public class MainActivity extends AppCompatActivity implements Communicator{
 
     private void setUpViewPager(ViewPager viewPager) {
         if(!flipped) {
+            //Creating the tabs and adding to the viewpager using an adapter
             TabViewPagerAdapter tabViewPagerAdapter = new TabViewPagerAdapter(getSupportFragmentManager());
-            tab1 = new Tab1();
-            tab2 = new Tab2();
-            tabViewPagerAdapter.addFragment(tab1, "Weather");
-            tabViewPagerAdapter.addFragment(tab2, "Map");
+            weatherTab = new WeatherTab();
+            mapTab = new MapTab();
+            tabViewPagerAdapter.addFragment(weatherTab, "Weather");
+            tabViewPagerAdapter.addFragment(mapTab, "Map");
             viewPager.setAdapter(tabViewPagerAdapter);
             viewPager.setPageTransformer(true, new CubeOutTransformer());
         }
 
     }
 
-    public void setTab1(Tab1 t1){
-        if(flipped)
-            tab1=t1;
-    }
-
-    public void setTab2(Tab2 t2){
-        if(flipped) {
-            tab2 = t2;
-            TabViewPagerAdapter tabViewPagerAdapter = new TabViewPagerAdapter(getSupportFragmentManager());
-            tabViewPagerAdapter.addFragment(tab1, "Weather");
-            tabViewPagerAdapter.addFragment(tab2, "Map");
-            viewPager.setAdapter(tabViewPagerAdapter);
-            viewPager.setPageTransformer(true, new CubeOutTransformer());
-        }
-
-    }
-
+    //----------------------Menu bar functions--------------------------
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater inflater = getMenuInflater();
-        inflater.inflate(R.menu.menu_search, menu);
-        MenuItem item = menu.findItem(R.id.menuSearch);
+        inflater.inflate(com.iot.mdp.weather_app.R.menu.menu_search, menu);
+        MenuItem item = menu.findItem(com.iot.mdp.weather_app.R.id.menuSearch);
         SearchView searchView = (SearchView) item.getActionView();
 
+        //Listener for the searchview to filter the data of the listview
         searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
             public boolean onQueryTextSubmit(String query) {
@@ -95,10 +84,10 @@ public class MainActivity extends AppCompatActivity implements Communicator{
 
             @Override
             public boolean onQueryTextChange(String newText) {
-                if (tab1!=null)
-                    tab1.weatherArrayAdapter.getFilter().filter(newText);
+                if (weatherTab !=null)
+                    weatherTab.weatherArrayAdapter.getFilter().filter(newText);
                 else
-                    System.out.println("Tab1 null");
+                    System.out.println("WeatherTab null");
                 return false;
             }
         });
@@ -106,15 +95,15 @@ public class MainActivity extends AppCompatActivity implements Communicator{
         return super.onCreateOptionsMenu(menu);
     }
 
-
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()){
-            case R.id.refresh:
-                if (tab1!=null)
-                    tab1.refreshInfo();
+            case com.iot.mdp.weather_app.R.id.refresh:
+                //Refresh the information of the listview, downloading again the xml files
+                if (weatherTab !=null)
+                    weatherTab.refreshInfo();
                 else
-                    System.out.println("Tab1 null");
+                    System.out.println("WeatherTab null");
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
@@ -123,12 +112,37 @@ public class MainActivity extends AppCompatActivity implements Communicator{
 
     }
 
+    //----------------------Communicator interface--------------------------
     @Override
+    //Interface function to communicate between tabs
     public void answer(String lastPostalCode, String lastCityName, String lastSkyState) {
-        tab2.addEntry(lastPostalCode, lastCityName, lastSkyState);
-        tab2.setLastPostalCodeOnMap(lastPostalCode, lastCityName, lastSkyState);
+        //Store the selected cities information and sky states
+        mapTab.addEntry(lastPostalCode, lastCityName, lastSkyState);
+        //Set the current selected city with the sky state marker on the map
+        mapTab.setLastPostalCodeOnMap(lastPostalCode, lastCityName, lastSkyState);
     }
 
+    //----------------------Tab communication functions--------------------------
+    public void setWeatherTab(WeatherTab t1){
+        if(flipped)
+            //to redirect the pointer of the weather tab when the fragment has recreated
+            weatherTab =t1;
+    }
+
+    public void setMapTab(MapTab t2){
+        if(flipped) {
+            //to redirect the pointer of the map tab when the fragment has recreated
+            mapTab = t2;
+            //adding to the viewpager
+            TabViewPagerAdapter tabViewPagerAdapter = new TabViewPagerAdapter(getSupportFragmentManager());
+            tabViewPagerAdapter.addFragment(weatherTab, "Weather");
+            tabViewPagerAdapter.addFragment(mapTab, "Map");
+            viewPager.setAdapter(tabViewPagerAdapter);
+            viewPager.setPageTransformer(true, new CubeOutTransformer());
+        }
+
+    }
+    //----------------------Lifecycle functions--------------------------
     @Override
     protected void onResume() {
         super.onResume();
@@ -140,35 +154,18 @@ public class MainActivity extends AppCompatActivity implements Communicator{
     }
 
     @Override
-    protected void onStop() {
-        super.onStop();
-//        Toast.makeText(getApplicationContext(),"Main stopped",Toast.LENGTH_SHORT).show();
-
-    }
-
-    @Override
-    protected void onRestart() {
-        super.onRestart();
-//        Toast.makeText(getApplicationContext(),"Main restart",Toast.LENGTH_SHORT).show();
-
-    }
-
-    @Override
     protected void onDestroy() {
         super.onDestroy();
         SharedPreferences sharedPref = getPreferences(Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedPref.edit();
 
         if (isFinishing()) {
-            //Closing app
+            //Closing the app
             editor.putBoolean("flipped",false);
         } else {
             //It's an orientation change.
             editor.putBoolean("flipped",true);
         }
         editor.commit();
-//        Toast.makeText(getApplicationContext(),"Main destroyed",Toast.LENGTH_SHORT).show();
-
-
     }
 }
